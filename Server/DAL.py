@@ -1,3 +1,4 @@
+import json
 import sqlite3
 from time import time
 
@@ -12,50 +13,97 @@ class DAL:
         # self.create_tables()
 
     def create_tables(self):
-        self.cursor.execute("CREATE TABLE IF NOT EXISTS"
-                            " voters(PRIMARY KEY id INT, username TEXT , password TEXT)")
-        self.cursor.execute("CREATE TABLE IF NOT EXISTS"
-                            " admins(PRIMARY KEY id INT, username TEXT , password TEXT)")
-        self.cursor.execute("CREATE TABLE IF NOT EXISTS"
-                            " voter_campaign_assignments(PRIMARY KEY id INT, username TEXT, campaign TEXT)")
-        self.cursor.execute("CREATE TABLE IF NOT EXISTS"
-                            " admin_campaign_assignments(PRIMARY KEY id INT, username TEXT, campaign TEXT)")
-        self.cursor.execute("CREATE TABLE IF NOT EXISTS"
-                            " votes(PRIMARY KEY vote_timestamp INT, username TEXT, nominee TEXT, campaign TEXT)")
-        self.cursor.execute("CREATE TABLE IF NOT EXISTS"
-                            " nominees(PRIMARY KEY id INT, nominee TEXT, description TEXT , campaignTEXT)")
-        self.cursor.execute("CREATE TABLE IF NOT EXISTS"
-                            " campaigns(PRIMARY KEY id INT, opening_timestamp INT, closing_timestamp INT , campaign TEXT)")
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS voters"
+                            "(PRIMARY KEY voter_id INT, username TEXT , password TEXT, public_key TEXT)")
 
-    def add_user(self, id, username, password):
-        self.cursor.execute(f"INSERT INTO voters VALUES ({id}, {username}, {password})")
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS admins"
+                            "(PRIMARY KEY admin_id INT, username TEXT , password TEXT, public_key TEXT)")
 
-    def add_admin(self, id, username, password):
-        self.cursor.execute(f"INSERT INTO admins VALUES ({id}, {username}, {password})")
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS campaigns"
+                            "(PRIMARY KEY campaign_id INT, opening_timestamp INT, closing_timestamp INT, campaign_name TEXT)")
 
-    def add_campaign(self, id, campaign, opening_time, closing_time):
-        self.cursor.execute(f"INSERT INTO campaigns VALUES ({id}, {campaign}, {opening_time}, {closing_time})")
+    def create_campaign_tables(self, campaign_id):
+        self.cursor.execute(
+            f"""CREATE TABLE IF NOT EXISTS votes_{campaign_id} (
+             PRIMARY KEY nonce TEXT, 
+             voter_id TEXT,
+             encrypted_vote TEXT,
+             vote_timestamp INTEGER,
+             FOREIGN KEY (voter_id) REFERENCES voters(voter_id))"""
+        )
+        self.cursor.execute(
+            f"""CREATE TABLE IF NOT EXISTS aggregated_votes_{campaign_id} (
+                            PRIMARY KEY candidate_id INTEGER, 
+                            encrypted_tally TEXT)"""
+        )
 
-    def add_vote(self, username, nominee, campaign):
-        self.cursor.execute(f"INSERT INTO votes VALUES ({username}, {nominee}, {campaign}, {time()})")
+        self.cursor.execute(
+            f"""CREATE TABLE IF NOT EXISTS campaign_voters_{campaign_id} (
+                            PRIMARY KEY voter_id INTEGER
+                            has_voted INTEGER)"""
+        )
 
-    def add_nominee(self, id, nominee, description, campaign):
-        self.cursor.execute(f"INSERT INTO nominees VALUES ({id}, {nominee}, {description}, {campaign})")
+        self.cursor.execute(
+            f"""CREATE TABLE IF NOT EXISTS campaign_nominees_{campaign_id} (
+                                PRIMARY KEY nominee_id INTEGER, 
+                                nominee_name TEXT,
+                                description TEXT)"""
+        )
 
-    def assign_user_to_campaign(self, id, username, campaign):
-        self.cursor.execute(f"INSERT INTO voter_campaign_assignments VALUES ({id}, {username}, {campaign})")
+        self.cursor.execute(f"""CREATE TABLE IF NOT EXISTS nonces_{campaign_id} (
+                                PRIMARY KEY nonce)""")
 
-    def assign_admin_to_campaign(self, id, username, campaign,):
-        self.cursor.execute(f"INSERT INTO admin_campaign_assignments VALUES ({id}, {username}, {campaign})")
+    def add_campaign(self, campaign_id, campaign_name):
+        self.cursor.execute(
+            f"INSERT INTO campaigns (campaign_id, name) VALUES ({campaign_id}, {campaign_name})",
+        )
+        self.create_campaign_tables(campaign_id)
 
-    def get_nominees_for_campaign(self, campaign_name):
-        return self.cursor.execute(f"SELECT nominee_name FROM nominees WHERE campaign_name={campaign_name}")
+    def add_voter(self, voter_id, public_key):
+        self.cursor.execute(
+            f"INSERT INTO voters (voter_id, public_key) VALUES ({voter_id}, {public_key})"
+        )
 
-    def get_campaigns_for_user(self, username):
-        return self.cursor.execute(f"SELECT campaign_name FROM campaigns WHERE username={username}")
+    def add_vote(self, campaign_id, nonce, voter_id, encrypted_vote):
+        self.cursor.execute(
+            f"INSERT INTO votes_{campaign_id} (nonce, voter_id, encrypted_vote) VALUES"
+            f" ({nonce}, {voter_id}, {encrypted_vote}, {time()})",
+        )
 
-    def get_results_for_campaign(self, campaign_name):
-        return self.cursor.execute(f"SELECT * FROM votes WHERE campaign_name={campaign_name}")
+    def add_nominee_to_campaign(self, nominee_id, campaign_id, nominee_name, description):
+        self.cursor.execute(f"INSERT INTO campaign_nominees_{campaign_id} VALUES ({nominee_id}, {nominee_name}, {description})")
+
+    def assign_voter_to_campaign(self, voter_id, campaign_id):
+        self.cursor.execute(f"INSERT INTO campaign_voters_{campaign_id} VALUES ({voter_id})")
+
+    def add_nonce(self, nonce, campaign_id):
+        self.cursor.execute(f"INSERT INTO nonces_{campaign_id} VALUES ({nonce})")
+
+    def nonce_exists(self, nonce, campaign_id):
+        self.cursor.execute(f"SELECT exists FROM nonces_{campaign_id} where nonce={nonce})")
+
+    def get_encrypted_votes_batch(self, campaign_id, batch_size, offset):
+        self.cursor.execute(
+            f"SELECT encrypted_vote FROM votes_{campaign_id} LIMIT {batch_size} OFFSET {offset}")
+        return [json.loads(row[0]) for row in self.cursor.fetchall()]  # [0]?
+
+    def get_total_votes_count(self, campaign_id):
+        self.cursor.execute(f"SELECT COUNT(*) FROM votes_{campaign_id}")
+        return self.cursor.fetchone()[0]
+
+    def store_aggregated_tally(self, campaign_id, candidate_id, encrypted_tally):
+        self.cursor.execute(
+            f"INSERT OR REPLACE INTO aggregated_votes_{campaign_id} VALUES ({candidate_id}, {encrypted_tally})"
+        )
+
+    def get_public_key(self, voter_id):
+        self.cursor.execute(f"SELECT public_key FROM voters WHERE voter_id={voter_id}")
+        row = self.cursor.fetchone()
+        return row[0] if row else None
+
+    def get_aggregated_tallies(self, campaign_id):
+        self.cursor.execute(f"SELECT candidate_id, encrypted_tally FROM aggregated_votes_{campaign_id}")
+        return {row[0]: row[1] for row in self.cursor.fetchall()}
 
 
 if __name__ == '__main__':
