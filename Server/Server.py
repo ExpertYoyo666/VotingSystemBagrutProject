@@ -17,6 +17,10 @@ class Server:
         pass
 
     def handle_client(self, client_socket):
+        state = {
+            "is_auth": False,
+            "is_admin": False
+        }
         while True:
             try:
                 # Read and validate the start marker
@@ -37,7 +41,7 @@ class Server:
                     break
 
                 print(f"Received: {payload}")
-                response = self.request_handler.handle_request(payload)
+                response = self.request_handler.handle_request(payload, state)
                 self.send_message(client_socket, response)
             except ConnectionResetError:
                 break

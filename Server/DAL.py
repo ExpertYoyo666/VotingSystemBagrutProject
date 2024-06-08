@@ -14,44 +14,43 @@ class DAL:
 
     def create_tables(self):
         self.cursor.execute("CREATE TABLE IF NOT EXISTS voters"
-                            "(PRIMARY KEY voter_id INT, username TEXT , password TEXT, public_key TEXT)")
+                            "(voter_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT , password TEXT, public_key TEXT)")
 
         self.cursor.execute("CREATE TABLE IF NOT EXISTS admins"
-                            "(PRIMARY KEY admin_id INT, username TEXT , password TEXT, public_key TEXT)")
+                            "(admin_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT , password TEXT, public_key TEXT)")
 
         self.cursor.execute("CREATE TABLE IF NOT EXISTS campaigns"
-                            "(PRIMARY KEY campaign_id INT, opening_timestamp INT, closing_timestamp INT, campaign_name TEXT)")
+                            "(campaign_id INTEGER PRIMARY KEY AUTOINCREMENT, opening_timestamp INT, closing_timestamp INT, campaign_name TEXT)")
 
     def create_campaign_tables(self, campaign_id):
         self.cursor.execute(
             f"""CREATE TABLE IF NOT EXISTS votes_{campaign_id} (
              PRIMARY KEY nonce TEXT, 
-             voter_id TEXT,
+             voter_id INTEGER,
              encrypted_vote TEXT,
-             vote_timestamp INTEGER,
-             FOREIGN KEY (voter_id) REFERENCES voters(voter_id))"""
+             vote_timestamp INTEGER)"""
         )
+
         self.cursor.execute(
             f"""CREATE TABLE IF NOT EXISTS aggregated_votes_{campaign_id} (
-                            PRIMARY KEY candidate_id INTEGER, 
+                            nominee_id INTEGER PRIMARY KEY, 
                             encrypted_tally TEXT)"""
         )
 
         self.cursor.execute(
             f"""CREATE TABLE IF NOT EXISTS campaign_voters_{campaign_id} (
-                            PRIMARY KEY voter_id INTEGER
+                            voter_id INTEGER PRIMARY KEY
                             has_voted INTEGER)"""
         )
 
         self.cursor.execute(
             f"""CREATE TABLE IF NOT EXISTS campaign_nominees_{campaign_id} (
-                                PRIMARY KEY nominee_id INTEGER, 
-                                nominee_name TEXT,
-                                description TEXT)"""
+                                nominee_id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                                nominee_name TEXT)"""
         )
 
         self.cursor.execute(f"""CREATE TABLE IF NOT EXISTS nonces_{campaign_id} (
-                                PRIMARY KEY nonce)""")
+                                nonce INTEGER PRIMARY KEY)""")
 
     def add_campaign(self, campaign_id, campaign_name):
         self.cursor.execute(
@@ -70,8 +69,8 @@ class DAL:
             f" ({nonce}, {voter_id}, {encrypted_vote}, {time()})",
         )
 
-    def add_nominee_to_campaign(self, nominee_id, campaign_id, nominee_name, description):
-        self.cursor.execute(f"INSERT INTO campaign_nominees_{campaign_id} VALUES ({nominee_id}, {nominee_name}, {description})")
+    def add_nominee_to_campaign(self, nominee_id, campaign_id, nominee_name):
+        self.cursor.execute(f"INSERT INTO campaign_nominees_{campaign_id} VALUES ({nominee_id}, {nominee_name})")
 
     def assign_voter_to_campaign(self, voter_id, campaign_id):
         self.cursor.execute(f"INSERT INTO campaign_voters_{campaign_id} VALUES ({voter_id})")
@@ -81,6 +80,14 @@ class DAL:
 
     def nonce_exists(self, nonce, campaign_id):
         self.cursor.execute(f"SELECT exists FROM nonces_{campaign_id} where nonce={nonce})")
+
+    def get_voter(self, username):
+        self.cursor.execute(f"SELECT * FROM voters where username={username}")
+        return self.cursor.fetchone()[0]
+
+    def get_admin(self, username):
+        self.cursor.execute(f"SELECT * FROM admins where username={username}")
+        return self.cursor.fetchone()[0]
 
     def get_encrypted_votes_batch(self, campaign_id, batch_size, offset):
         self.cursor.execute(
