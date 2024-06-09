@@ -2,55 +2,54 @@ import json
 import sqlite3
 from time import time
 
-DB_PATH = ".//db//db.db"
-
+DB_PATH = "voting-system.sqlite"
 
 class DAL:
     def __init__(self):
         self.db_path = DB_PATH
         self.con = sqlite3.connect(self.db_path)
         self.cursor = self.con.cursor()
-        # self.create_tables()
+        self.create_tables_if_needed()
 
-    def create_tables(self):
+    def create_tables_if_needed(self):
         self.cursor.execute("CREATE TABLE IF NOT EXISTS voters"
-                            "(voter_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT , password TEXT, public_key TEXT)")
+            "(voter_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, public_key TEXT)")
 
         self.cursor.execute("CREATE TABLE IF NOT EXISTS admins"
-                            "(admin_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT , password TEXT, public_key TEXT)")
+            "(admin_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, public_key TEXT)")
 
         self.cursor.execute("CREATE TABLE IF NOT EXISTS campaigns"
-                            "(campaign_id INTEGER PRIMARY KEY AUTOINCREMENT, opening_timestamp INT, closing_timestamp INT, campaign_name TEXT)")
+            "(campaign_id INTEGER PRIMARY KEY AUTOINCREMENT, campaign_name TEXT, start_timestamp INT, end_timestamp INT)")
 
     def create_campaign_tables(self, campaign_id):
         self.cursor.execute(
-            f"""CREATE TABLE IF NOT EXISTS votes_{campaign_id} (
-             PRIMARY KEY nonce TEXT, 
-             voter_id INTEGER,
-             encrypted_vote TEXT,
-             vote_timestamp INTEGER)"""
+            f"""CREATE TABLE votes_{campaign_id} (
+                 PRIMARY KEY nonce TEXT, 
+                 voter_id INTEGER,
+                 encrypted_vote TEXT,
+                 vote_timestamp INTEGER)"""
         )
 
         self.cursor.execute(
-            f"""CREATE TABLE IF NOT EXISTS aggregated_votes_{campaign_id} (
-                            nominee_id INTEGER PRIMARY KEY, 
-                            encrypted_tally TEXT)"""
+            f"""CREATE TABLE aggregated_votes_{campaign_id} (
+                nominee_id INTEGER PRIMARY KEY, 
+                encrypted_tally TEXT)"""
         )
 
         self.cursor.execute(
-            f"""CREATE TABLE IF NOT EXISTS campaign_voters_{campaign_id} (
-                            voter_id INTEGER PRIMARY KEY
-                            has_voted INTEGER)"""
+            f"""CREATE TABLE campaign_voters_{campaign_id} (
+                voter_id INTEGER PRIMARY KEY
+                has_voted INTEGER)"""
         )
 
         self.cursor.execute(
-            f"""CREATE TABLE IF NOT EXISTS campaign_nominees_{campaign_id} (
-                                nominee_id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                                nominee_name TEXT)"""
+            f"""CREATE TABLE campaign_nominees_{campaign_id} (
+                nominee_id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                nominee_name TEXT)"""
         )
 
-        self.cursor.execute(f"""CREATE TABLE IF NOT EXISTS nonces_{campaign_id} (
-                                nonce INTEGER PRIMARY KEY)""")
+        self.cursor.execute(f"""CREATE TABLE nonces_{campaign_id} (
+                nonce INTEGER PRIMARY KEY)""")
 
     def add_campaign(self, campaign_id, campaign_name):
         self.cursor.execute(
