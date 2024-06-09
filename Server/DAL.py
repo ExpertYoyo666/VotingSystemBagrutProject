@@ -20,12 +20,12 @@ class DAL:
                             "(admin_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, public_key TEXT)")
 
         self.cursor.execute("CREATE TABLE IF NOT EXISTS campaigns"
-                            "(campaign_id INTEGER PRIMARY KEY AUTOINCREMENT, campaign_name TEXT, start_timestamp INT, end_timestamp INT)")
+                            "(campaign_id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, start_timestamp INT, end_timestamp INT)")
 
     def create_campaign_tables(self, campaign_id):
         self.cursor.execute(
             f"""CREATE TABLE votes_{campaign_id} (
-                 PRIMARY KEY nonce TEXT, 
+                 nonce TEXT PRIMARY KEY, 
                  voter_id INTEGER,
                  encrypted_vote TEXT,
                  vote_timestamp INTEGER)"""
@@ -39,7 +39,7 @@ class DAL:
 
         self.cursor.execute(
             f"""CREATE TABLE campaign_voters_{campaign_id} (
-                voter_id INTEGER PRIMARY KEY
+                voter_id INTEGER PRIMARY KEY,
                 has_voted INTEGER)"""
         )
 
@@ -49,26 +49,38 @@ class DAL:
                 nominee_name TEXT)"""
         )
 
-        self.cursor.execute(f"""CREATE TABLE nonces_{campaign_id} (
+        self.cursor.execute(
+            f"""CREATE TABLE nonces_{campaign_id} (
                 nonce INTEGER PRIMARY KEY)""")
 
     def add_campaign(self, campaign_name, start_timestamp, end_timestamp):
         self.cursor.execute(
-            f"INSERT INTO campaigns (name, start_timestamp, end_timestamp) "
-            f" ({campaign_name}, {start_timestamp}, {end_timestamp})",
+            "INSERT INTO campaigns (name, start_timestamp, end_timestamp) VALUES (?, ?, ?)",
+            (campaign_name, start_timestamp, end_timestamp)
         )
+        self.con.commit()
         self.create_campaign_tables(self.cursor.lastrowid)
 
     def add_voter(self, username, password, public_key):
         self.cursor.execute(
-            f"INSERT INTO voters (username, password, public_key) VALUES ({username}, {password}, {public_key})"
+            "INSERT INTO voters (username, password, public_key) VALUES (?, ?, ?)",
+            (username, password, public_key)
         )
+        self.con.commit()
+
+    def add_admin(self, username, password, public_key):
+        self.cursor.execute(
+            "INSERT INTO admins (username, password, public_key) VALUES (?, ?, ?)",
+            (username, password, public_key)
+        )
+        self.con.commit()
 
     def add_vote(self, campaign_id, nonce, voter_id, encrypted_vote):
         self.cursor.execute(
-            f"INSERT INTO votes_{campaign_id} (nonce, voter_id, encrypted_vote) VALUES"
-            f" ({nonce}, {voter_id}, {encrypted_vote}, {time()})",
+            f"INSERT INTO votes_{campaign_id} (nonce, voter_id, encrypted_vote, vote_timestamp) VALUES (?, ?, ?, ?)",
+            (nonce, voter_id, encrypted_vote, time())
         )
+        self.con.commit()
 
     def add_nominee_to_campaign(self, campaign_id, nominee_name):
         self.cursor.execute(f"INSERT INTO campaign_nominees_{campaign_id} VALUES ({nominee_name})")
@@ -83,11 +95,11 @@ class DAL:
         self.cursor.execute(f"SELECT EXISTS (SELECT * FROM nonces_{campaign_id} where nonce={nonce})")
 
     def get_voter(self, username):
-        self.cursor.execute(f"SELECT * FROM voters where username={username}")
+        self.cursor.execute("SELECT * FROM voters WHERE username=(?)", (username,))
         return self.cursor.fetchone()[0]
 
     def get_admin(self, username):
-        self.cursor.execute(f"SELECT * FROM admins where username={username}")
+        self.cursor.execute("SELECT * FROM admins WHERE username=(?)", (username,))
         return self.cursor.fetchone()[0]
 
     def get_campaign_info(self, campaign_id):
