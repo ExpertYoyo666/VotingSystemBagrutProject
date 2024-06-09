@@ -17,7 +17,9 @@ class DAL:
                             "(voter_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, public_key TEXT)")
 
         self.cursor.execute("CREATE TABLE IF NOT EXISTS admins"
-                            "(admin_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, public_key TEXT)")
+                            "(admin_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT)")
+
+        self.add_admin("admin", "admin")
 
         self.cursor.execute("CREATE TABLE IF NOT EXISTS campaigns"
                             "(campaign_id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, start_timestamp INT, end_timestamp INT,"
@@ -69,10 +71,10 @@ class DAL:
         )
         self.con.commit()
 
-    def add_admin(self, username, password, public_key):
+    def add_admin(self, username, password):
         self.cursor.execute(
-            "INSERT INTO admins (username, password, public_key) VALUES (?, ?, ?)",
-            (username, password, public_key)
+            "INSERT INTO admins (username, password) VALUES (?, ?)",
+            (username, password)
         )
         self.con.commit()
 

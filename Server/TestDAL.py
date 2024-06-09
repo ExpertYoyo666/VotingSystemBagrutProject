@@ -7,11 +7,6 @@ from time import time
 from DAL import DAL
 
 
-def table_exists(table_name, dal):
-    return bool(
-        dal.cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'").fetchall())
-
-
 class TestDAL(unittest.TestCase):
 
     def setUp(self):
