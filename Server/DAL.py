@@ -24,7 +24,7 @@ class DAL:
     def create_campaign_tables(self, campaign_id):
         self.cursor.execute(
             f"""CREATE TABLE votes_{campaign_id} (
-                 PRIMARY KEY nonce TEXT, 
+                 nonce TEXT PRIMARY KEY, 
                  voter_id INTEGER,
                  encrypted_vote TEXT,
                  vote_timestamp INTEGER)"""
@@ -38,7 +38,7 @@ class DAL:
 
         self.cursor.execute(
             f"""CREATE TABLE campaign_voters_{campaign_id} (
-                voter_id INTEGER PRIMARY KEY
+                voter_id INTEGER PRIMARY KEY,
                 has_voted INTEGER)"""
         )
 
@@ -48,25 +48,38 @@ class DAL:
                 nominee_name TEXT)"""
         )
 
-        self.cursor.execute(f"""CREATE TABLE nonces_{campaign_id} (
+        self.cursor.execute(
+            f"""CREATE TABLE nonces_{campaign_id} (
                 nonce INTEGER PRIMARY KEY)""")
 
     def add_campaign(self, campaign_id, campaign_name):
         self.cursor.execute(
-            f"INSERT INTO campaigns (campaign_id, name) VALUES ({campaign_id}, {campaign_name})",
+            "INSERT INTO campaigns (campaign_id, campaign_name) VALUES (?, ?)",
+            (campaign_id, campaign_name)
         )
+        self.con.commit()
         self.create_campaign_tables(campaign_id)
 
     def add_voter(self, voter_id, public_key):
         self.cursor.execute(
-            f"INSERT INTO voters (voter_id, public_key) VALUES ({voter_id}, {public_key})"
+            "INSERT INTO voters (voter_id, public_key) VALUES (?, ?)",
+            (voter_id, public_key)
         )
+        self.con.commit()
+
+    def add_admin(self, username, password, public_key):
+        self.cursor.execute(
+            "INSERT INTO admins (username, password, public_key) VALUES (?, ?, ?)",
+            (username, password, public_key)
+        )
+        self.con.commit()
 
     def add_vote(self, campaign_id, nonce, voter_id, encrypted_vote):
         self.cursor.execute(
-            f"INSERT INTO votes_{campaign_id} (nonce, voter_id, encrypted_vote) VALUES"
-            f" ({nonce}, {voter_id}, {encrypted_vote}, {time()})",
+            f"INSERT INTO votes_{campaign_id} (nonce, voter_id, encrypted_vote, vote_timestamp) VALUES (?, ?, ?, ?)",
+            (nonce, voter_id, encrypted_vote, time())
         )
+        self.con.commit()
 
     def add_nominee_to_campaign(self, nominee_id, campaign_id, nominee_name):
         self.cursor.execute(f"INSERT INTO campaign_nominees_{campaign_id} VALUES ({nominee_id}, {nominee_name})")
