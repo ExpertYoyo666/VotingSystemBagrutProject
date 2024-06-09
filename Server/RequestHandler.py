@@ -82,30 +82,43 @@ class RequestHandler:
         username = request["username"]
         password = request["password"]
 
+        response = {
+            "type": RequestType.AUTH_RESPONSE,
+        }
         voter = self.dal.get_voter(username)
         if voter.password == password:
-            response = {
-                "status": "SUCCESS"
-            }
+            response["status"] = "SUCCESS"
 
             return response, voter.voter_id, True
 
-        response = {
-            "status": "FAILED"
-        }
+        response["status"] = "FAILED"
         return response, voter.voter_id, False
 
     def handle_campaign_info_request(self, request):
-        return 1
+        campaign_id = request["campaign_id"]
+
+        nominees_list, public_key = self.dal.get_campaign_info(campaign_id)
+
+        response = {
+            "type": RequestType.CAMPAIGN_INFO_RESPONSE,
+            "nominees": nominees_list,
+            "public_key": public_key
+        }
+
+        return response
 
     def handle_vote(self, request):
         return 1
 
-    def handle_campaign_list_request(self, request, is_admin):
-        return 1
+    def handle_campaign_list_request(self, is_admin):
+        campaigns = self.dal.get_campaign_list(is_admin)
 
-    def handle_error(self, request, message):
-        return 1
+        response = {
+            "type": RequestType.CAMPAIGN_LIST_RESPONSE,
+            "campaigns": campaigns
+        }
+
+        return response
 
     def handle_add_campaign(self, request):
         return 1
@@ -114,17 +127,16 @@ class RequestHandler:
         username = request["username"]
         password = request["password"]
 
+        response = {
+            "type": RequestType.ADMIN_AUTH_RESPONSE,
+        }
         admin = self.dal.get_admin(username)
         if admin.password == password:
-            response = {
-                "status": "SUCCESS"
-            }
+            response["status"] = "SUCCESS"
 
             return response, admin.admin_id, True
 
-        response = {
-            "status": "FAILED"
-        }
+        response["status"] = "FAILED"
         return response, admin.admin_id, False
 
     def handle_add_nominee(self, request):
