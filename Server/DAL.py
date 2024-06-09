@@ -4,6 +4,7 @@ from time import time
 
 DB_PATH = "voting-system.sqlite"
 
+
 class DAL:
     def __init__(self):
         self.db_path = DB_PATH
@@ -13,13 +14,13 @@ class DAL:
 
     def create_tables_if_needed(self):
         self.cursor.execute("CREATE TABLE IF NOT EXISTS voters"
-            "(voter_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, public_key TEXT)")
+                            "(voter_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, public_key TEXT)")
 
         self.cursor.execute("CREATE TABLE IF NOT EXISTS admins"
-            "(admin_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, public_key TEXT)")
+                            "(admin_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, public_key TEXT)")
 
         self.cursor.execute("CREATE TABLE IF NOT EXISTS campaigns"
-            "(campaign_id INTEGER PRIMARY KEY AUTOINCREMENT, campaign_name TEXT, start_timestamp INT, end_timestamp INT)")
+                            "(campaign_id INTEGER PRIMARY KEY AUTOINCREMENT, campaign_name TEXT, start_timestamp INT, end_timestamp INT)")
 
     def create_campaign_tables(self, campaign_id):
         self.cursor.execute(
@@ -91,7 +92,7 @@ class DAL:
         self.cursor.execute(f"INSERT INTO nonces_{campaign_id} VALUES ({nonce})")
 
     def nonce_exists(self, nonce, campaign_id):
-        self.cursor.execute(f"SELECT exists FROM nonces_{campaign_id} where nonce={nonce})")
+        self.cursor.execute(f"SELECT EXISTS (SELECT * FROM nonces_{campaign_id} where nonce={nonce})")
 
     def get_voter(self, username):
         self.cursor.execute(f"SELECT * FROM voters where username={username}")
@@ -100,6 +101,28 @@ class DAL:
     def get_admin(self, username):
         self.cursor.execute(f"SELECT * FROM admins where username={username}")
         return self.cursor.fetchone()[0]
+
+    def get_campaign_info(self, campaign_id):
+        nominees = self.cursor.execute(f"SELECT * FROM campaign_nominees_{campaign_id}").fetchall()
+        nominees = [row[0] for row in nominees]
+
+        public_key = self.cursor.execute(f"SELECT public_key FROM campaign"
+                                         f" WHERE campaign_id={campaign_id}").fetchone()[0]
+        return nominees, public_key
+
+    def get_campaign_list(self, is_admin):
+        all_campaigns = self.cursor.execute(f"SELECT campaign_id FROM campaigns").fetchall()
+        all_campaigns = [row[0] for row in all_campaigns]
+
+        if not is_admin:
+            campaigns = []
+            for campaign_id in all_campaigns:
+                if self.cursor.execute(f"SELECT * FROM campaign_voters_{campaign_id}"):
+                    campaigns.append(campaign_id)
+
+            return campaigns
+
+        return all_campaigns
 
     def get_encrypted_votes_batch(self, campaign_id, batch_size, offset):
         self.cursor.execute(
