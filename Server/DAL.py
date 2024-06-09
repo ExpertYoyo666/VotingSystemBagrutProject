@@ -6,8 +6,8 @@ DB_PATH = "voting-system.sqlite"
 
 
 class DAL:
-    def __init__(self):
-        self.db_path = DB_PATH
+    def __init__(self, db_path=DB_PATH):
+        self.db_path = db_path
         self.con = sqlite3.connect(self.db_path)
         self.cursor = self.con.cursor()
         self.create_tables_if_needed()
@@ -86,7 +86,7 @@ class DAL:
         self.con.commit()
 
     def add_nominee_to_campaign(self, campaign_id, nominee_name):
-        self.cursor.execute(f"INSERT INTO campaign_nominees_{campaign_id} VALUES ({nominee_name})")
+        self.cursor.execute(f"INSERT INTO campaign_nominees_{campaign_id} (nominee_name) VALUES (?)", (nominee_name,))
 
     def assign_voter_to_campaign(self, voter_id, campaign_id):
         self.cursor.execute(f"INSERT INTO campaign_voters_{campaign_id} VALUES ({voter_id})")
@@ -99,22 +99,23 @@ class DAL:
 
     def get_voter(self, username):
         self.cursor.execute("SELECT * FROM voters WHERE username=(?)", (username,))
-        return self.cursor.fetchone()[0]
+        return self.cursor.fetchone()
 
     def get_admin(self, username):
         self.cursor.execute("SELECT * FROM admins WHERE username=(?)", (username,))
-        return self.cursor.fetchone()[0]
+        return self.cursor.fetchone()
 
     def get_campaign_info(self, campaign_id):
         nominees = self.cursor.execute(f"SELECT * FROM campaign_nominees_{campaign_id}").fetchall()
-        nominees = [row[0] for row in nominees]
+        nominees = [row for row in nominees]
 
-        public_key = self.cursor.execute(f"SELECT public_key FROM campaign"
+        public_key = self.cursor.execute(f"SELECT public_key FROM campaigns"
                                          f" WHERE campaign_id={campaign_id}").fetchone()[0]
         return nominees, public_key
 
     def get_campaign_list(self, voter_id, is_admin):
-        all_campaigns = self.cursor.execute("SELECT * FROM campaigns").fetchall()
+        self.cursor.execute("SELECT * FROM campaigns")
+        all_campaigns = self.cursor.fetchall()
         if is_admin:
             return all_campaigns
 
@@ -151,7 +152,3 @@ class DAL:
     def get_aggregated_tallies(self, campaign_id):
         self.cursor.execute(f"SELECT nominee_id, encrypted_tally FROM aggregated_votes_{campaign_id}")
         return {row[0]: row[1] for row in self.cursor.fetchall()}
-
-
-if __name__ == '__main__':
-    dbm = DAL()  # DAL = Data Abstraction Layer

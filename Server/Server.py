@@ -2,6 +2,7 @@ import socket
 import threading
 import struct
 import json
+import ssl
 
 from RequestHandler import RequestHandler
 
@@ -9,7 +10,8 @@ START_MARKER = b'\x01\x02'
 END_MARKER = b'\x03\x04'
 
 PORT = 1234
-
+CERT_FILE = 'cert.pem'
+KEY_FILE = 'key.pem'
 
 class Server:
     def __init__(self):
@@ -71,12 +73,15 @@ class Server:
         server.listen(5)
         print(f"Server listening on port {PORT}")
 
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
+
         while True:
             client_socket, address = server.accept()
             print(f"Accepted connection from {address}")
+            client_socket = context.wrap_socket(client_socket, server_side=True)
             client_handler_thread = threading.Thread(target=self.handle_client, args=(client_socket,))
             client_handler_thread.start()
-
 
 if __name__ == '__main__':
     server = Server()

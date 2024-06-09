@@ -26,9 +26,8 @@ class RequestType(Enum):
 
 
 class RequestHandler:
-    def __init__(self):
-        self.dal = DAL()
-        pass
+    def __init__(self, dal):
+        self.dal = dal
 
     def handle_request(self, request_str, state):
         request = json.loads(request_str)
@@ -42,38 +41,38 @@ class RequestHandler:
         }
 
         match request["type"]:
-            case RequestType.AUTH_REQUEST:
+            case RequestType.AUTH_REQUEST.value:
                 if not is_auth:
                     response, voter_id, auth_ok = self.handle_auth(request)
                     if auth_ok:
                         state["is_auth"] = True
                         state["uid"] = voter_id
-            case RequestType.CAMPAIGN_LIST_REQUEST:
+            case RequestType.CAMPAIGN_LIST_REQUEST.value:
                 if is_auth:
                     response = self.handle_campaign_list_request(request, is_admin)
-            case RequestType.CAMPAIGN_INFO_REQUEST:
+            case RequestType.CAMPAIGN_INFO_REQUEST.value:
                 if is_auth:
                     response = self.handle_campaign_info_request(request)
-            case RequestType.VOTE_REQUEST:
+            case RequestType.VOTE_REQUEST.value:
                 if is_auth and not is_admin:
                     response = self.handle_vote(request)
-            case RequestType.ADMIN_AUTH_REQUEST:
+            case RequestType.ADMIN_AUTH_REQUEST.value:
                 if not is_auth:
                     response, admin_id, auth_ok = self.handle_admin_auth(request)
                     if auth_ok:
                         state["is_auth"] = True
                         state["is_admin"] = True
                         state["uid"] = admin_id
-            case RequestType.ADD_CAMPAIGN_REQUEST:
+            case RequestType.ADD_CAMPAIGN_REQUEST.value:
                 if is_auth and is_admin:
                     response = self.handle_add_campaign(request)
-            case RequestType.ADD_NOMINEE_REQUEST:
+            case RequestType.ADD_NOMINEE_REQUEST.value:
                 if is_auth and is_admin:
                     response = self.handle_add_nominee(request)
-            case RequestType.ADD_VOTER_REQUEST:
+            case RequestType.ADD_VOTER_REQUEST.value:
                 if is_auth and is_admin:
                     response = self.handle_add_voter(request)
-            case RequestType.GET_RESULTS_REQUEST:
+            case RequestType.GET_RESULTS_REQUEST.value:
                 if is_auth and is_admin:
                     response = self.handle_get_results(request)
 
@@ -133,7 +132,10 @@ class RequestHandler:
         end_timestamp = request["end_timestamp"]
         public_key, private_key = generate_keys()
 
-        self.dal.add_campaign(campaign_name, start_timestamp, end_timestamp, public_key, private_key)
+        public_key_str = f'{public_key.n}'
+        private_key_str = f'{private_key.p} {private_key.q}'
+
+        self.dal.add_campaign(campaign_name, start_timestamp, end_timestamp, public_key_str, private_key_str)
 
         response = {
             "type": RequestType.GENERIC_RESPONSE,
@@ -150,16 +152,16 @@ class RequestHandler:
             "type": RequestType.ADMIN_AUTH_RESPONSE,
         }
         admin = self.dal.get_admin(username)
-        if admin.password == password:
+        if admin[2] == password:
             response["status"] = "SUCCESS"
 
-            return response, admin.admin_id, True
+            return response, admin[0], True
 
         response["status"] = "FAILED"
-        return response, admin.admin_id, False
+        return response, admin[0], False
 
     def handle_add_nominee(self, request):
-        campaign_id = request["campaign"]
+        campaign_id = request["campaign_id"]
         name = request["name"]
 
         self.dal.add_nominee_to_campaign(campaign_id, name)
@@ -175,7 +177,7 @@ class RequestHandler:
         username = request["username"]
         password = request["password"]
 
-        self.dal.add_voter(username, password, None)
+        self.dal.add_voter(username, password, "")
 
         response = {
             "type": RequestType.GENERIC_RESPONSE,
@@ -199,13 +201,3 @@ class RequestHandler:
         }
 
         return response
-
-
-if __name__ == '__main__':
-    r = RequestHandler()
-    x = {
-        "type": "AUTH_REQUEST",
-        "username": "yoyo666",
-        "password": "bomba!1234"
-    }
-    print(r.handle_request(json.dumps(x), {"is_admin": False, "is_auth": True}))
