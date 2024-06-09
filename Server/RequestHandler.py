@@ -172,11 +172,10 @@ class RequestHandler:
         return response
 
     def handle_add_voter(self, request):
-        public_key = request["public_key"]
         username = request["username"]
         password = request["password"]
 
-        self.dal.add_voter(username, password, public_key)
+        self.dal.add_voter(username, password, None)
 
         response = {
             "type": RequestType.GENERIC_RESPONSE,

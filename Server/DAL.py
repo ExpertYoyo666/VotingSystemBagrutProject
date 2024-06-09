@@ -114,19 +114,20 @@ class DAL:
         return nominees, public_key
 
     def get_campaign_list(self, voter_id, is_admin):
-        all_campaigns = self.cursor.execute(f"SELECT campaign_id FROM campaigns").fetchall()
-        all_campaigns = [row[0] for row in all_campaigns]
+        all_campaigns = self.cursor.execute("SELECT * FROM campaigns").fetchall()
+        if is_admin:
+            return all_campaigns
 
-        if not is_admin:
-            campaigns = []
-            for campaign_id in all_campaigns:
-                if (campaign_info := self.cursor.execute(
-                        f"SELECT * FROM campaign_voters_{campaign_id} WHERE voter_id={voter_id}").fetchone()):
-                    campaigns.append((campaign_info[1], campaign_info[2], campaign_info[3], campaign_info[4]))
+        campaigns = []
 
-            return campaigns
+        for campaign in all_campaigns:
+            campaign_id = campaign[0]
+            voter_count = self.cursor.execute(
+                "SELECT COUNT(*) FROM campaign_voters_? WHERE voter_id=?", (campaign_id, voter_id)).fetchone()[0]
+            if voter_count > 0:
+                campaigns.append(campaign)
 
-        return all_campaigns
+        return campaigns
 
     def get_encrypted_votes_batch(self, campaign_id, batch_size, offset):
         self.cursor.execute(
