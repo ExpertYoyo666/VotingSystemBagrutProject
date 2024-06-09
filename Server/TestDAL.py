@@ -68,7 +68,7 @@ class TestDAL(unittest.TestCase):
 
     def test_add_vote(self):
         self.dal.create_campaign_tables(1)
-        self.dal.add_vote(1, "test_nonce", "encrypted_vote", int(time()))
+        self.dal.add_vote(1, "test_nonce", 2, "encrypted_vote")
         self.dal.cursor.execute("SELECT * FROM votes_1 WHERE nonce='test_nonce'")
         vote = self.dal.cursor.fetchone()
         self.assertIsNotNone(vote)

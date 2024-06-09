@@ -61,10 +61,10 @@ class DAL:
         self.con.commit()
         self.create_campaign_tables(campaign_id)
 
-    def add_voter(self, voter_id, public_key):
+    def add_voter(self, username, password, public_key):
         self.cursor.execute(
-            "INSERT INTO voters (voter_id, public_key) VALUES (?, ?)",
-            (voter_id, public_key)
+            "INSERT INTO voters (username, password, public_key) VALUES (?, ?, ?)",
+            (username, password, public_key)
         )
         self.con.commit()
 
