@@ -52,15 +52,16 @@ class DAL:
         self.cursor.execute(f"""CREATE TABLE nonces_{campaign_id} (
                 nonce INTEGER PRIMARY KEY)""")
 
-    def add_campaign(self, campaign_id, campaign_name):
+    def add_campaign(self, campaign_name, start_timestamp, end_timestamp):
         self.cursor.execute(
-            f"INSERT INTO campaigns (campaign_id, name) VALUES ({campaign_id}, {campaign_name})",
+            f"INSERT INTO campaigns (name, start_timestamp, end_timestamp) "
+            f" ({campaign_name}, {start_timestamp}, {end_timestamp})",
         )
-        self.create_campaign_tables(campaign_id)
+        self.create_campaign_tables(self.cursor.lastrowid)
 
-    def add_voter(self, voter_id, public_key):
+    def add_voter(self, username, password, public_key):
         self.cursor.execute(
-            f"INSERT INTO voters (voter_id, public_key) VALUES ({voter_id}, {public_key})"
+            f"INSERT INTO voters (username, password, public_key) VALUES ({username}, {password}, {public_key})"
         )
 
     def add_vote(self, campaign_id, nonce, voter_id, encrypted_vote):
@@ -69,8 +70,8 @@ class DAL:
             f" ({nonce}, {voter_id}, {encrypted_vote}, {time()})",
         )
 
-    def add_nominee_to_campaign(self, nominee_id, campaign_id, nominee_name):
-        self.cursor.execute(f"INSERT INTO campaign_nominees_{campaign_id} VALUES ({nominee_id}, {nominee_name})")
+    def add_nominee_to_campaign(self, campaign_id, nominee_name):
+        self.cursor.execute(f"INSERT INTO campaign_nominees_{campaign_id} VALUES ({nominee_name})")
 
     def assign_voter_to_campaign(self, voter_id, campaign_id):
         self.cursor.execute(f"INSERT INTO campaign_voters_{campaign_id} VALUES ({voter_id})")
@@ -97,14 +98,14 @@ class DAL:
                                          f" WHERE campaign_id={campaign_id}").fetchone()[0]
         return nominees, public_key
 
-    def get_campaign_list(self, is_admin):
+    def get_campaign_list(self, voter_id, is_admin):
         all_campaigns = self.cursor.execute(f"SELECT campaign_id FROM campaigns").fetchall()
         all_campaigns = [row[0] for row in all_campaigns]
 
         if not is_admin:
             campaigns = []
             for campaign_id in all_campaigns:
-                if self.cursor.execute(f"SELECT * FROM campaign_voters_{campaign_id}"):
+                if self.cursor.execute(f"SELECT * FROM campaign_voters_{campaign_id} WHERE voter_id={voter_id}"):
                     campaigns.append(campaign_id)
 
             return campaigns

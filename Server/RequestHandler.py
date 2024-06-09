@@ -110,8 +110,9 @@ class RequestHandler:
     def handle_vote(self, request):
         return 1
 
-    def handle_campaign_list_request(self, is_admin):
-        campaigns = self.dal.get_campaign_list(is_admin)
+    def handle_campaign_list_request(self, request, is_admin):
+        voter_id = request["voter_id"]
+        campaigns = self.dal.get_campaign_list(voter_id, is_admin)
 
         response = {
             "type": RequestType.CAMPAIGN_LIST_RESPONSE,
@@ -121,7 +122,18 @@ class RequestHandler:
         return response
 
     def handle_add_campaign(self, request):
-        return 1
+        campaign_name = request["name"]
+        start_timestamp = request["start_timestamp"]
+        end_timestamp = request["end_timestamp"]
+
+        self.dal.add_campaign(campaign_name, start_timestamp, end_timestamp)
+
+        response = {
+            "type": RequestType.GENERIC_RESPONSE,
+            "status": "SUCCESS"
+        }
+
+        return response
 
     def handle_admin_auth(self, request):
         username = request["username"]
@@ -140,13 +152,47 @@ class RequestHandler:
         return response, admin.admin_id, False
 
     def handle_add_nominee(self, request):
-        return 1
+        campaign_id = request["campaign"]
+        name = request["name"]
+
+        self.dal.add_nominee_to_campaign(campaign_id, name)
+
+        response = {
+            "type": RequestType.GENERIC_RESPONSE,
+            "status": "SUCCESS"
+        }
+
+        return response
 
     def handle_add_voter(self, request):
-        return 1
+        public_key = request["public_key"]
+        username = request["username"]
+        password = request["password"]
+
+        self.dal.add_voter(username, password, public_key)
+
+        response = {
+            "type": RequestType.GENERIC_RESPONSE,
+            "status": "SUCCESS"
+        }
+
+        return response
 
     def handle_get_results(self, request):
         return 1
+
+    def handle_assign_voter_to_campaign_request(self, request):
+        voter_id = request["voter_id"]
+        campaign_id = request["campaign_id"]
+
+        self.dal.assign_voter_to_campaign(voter_id, campaign_id)
+
+        response = {
+            "type": RequestType.GENERIC_RESPONSE,
+            "status": "SUCCESS"
+        }
+
+        return response
 
 
 if __name__ == '__main__':
