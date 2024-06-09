@@ -20,7 +20,8 @@ class DAL:
                             "(admin_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, public_key TEXT)")
 
         self.cursor.execute("CREATE TABLE IF NOT EXISTS campaigns"
-                            "(campaign_id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, start_timestamp INT, end_timestamp INT)")
+                            "(campaign_id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, start_timestamp INT, end_timestamp INT,"
+                            "public_key TEXT, private_key TEXT)")
 
     def create_campaign_tables(self, campaign_id):
         self.cursor.execute(
@@ -53,10 +54,10 @@ class DAL:
             f"""CREATE TABLE nonces_{campaign_id} (
                 nonce INTEGER PRIMARY KEY)""")
 
-    def add_campaign(self, campaign_name, start_timestamp, end_timestamp):
+    def add_campaign(self, campaign_name, start_timestamp, end_timestamp, public_key, private_key):
         self.cursor.execute(
-            "INSERT INTO campaigns (name, start_timestamp, end_timestamp) VALUES (?, ?, ?)",
-            (campaign_name, start_timestamp, end_timestamp)
+            "INSERT INTO campaigns (name, start_timestamp, end_timestamp, public_key, private_key) VALUES (?, ?, ?, ?, ?)",
+            (campaign_name, start_timestamp, end_timestamp, public_key, private_key)
         )
         self.con.commit()
         self.create_campaign_tables(self.cursor.lastrowid)
@@ -75,10 +76,10 @@ class DAL:
         )
         self.con.commit()
 
-    def add_vote(self, campaign_id, nonce, voter_id, encrypted_vote):
+    def add_vote(self, nonce, voter_id, campaign_id, encrypted_vote):
         self.cursor.execute(
             f"INSERT INTO votes_{campaign_id} (nonce, voter_id, encrypted_vote, vote_timestamp) VALUES (?, ?, ?, ?)",
-            (nonce, voter_id, encrypted_vote, time())
+            (nonce, voter_id, encrypted_vote, int(time()))
         )
         self.con.commit()
 
@@ -117,8 +118,9 @@ class DAL:
         if not is_admin:
             campaigns = []
             for campaign_id in all_campaigns:
-                if self.cursor.execute(f"SELECT * FROM campaign_voters_{campaign_id} WHERE voter_id={voter_id}"):
-                    campaigns.append(campaign_id)
+                if (campaign_info := self.cursor.execute(
+                        f"SELECT * FROM campaign_voters_{campaign_id} WHERE voter_id={voter_id}").fetchone()):
+                    campaigns.append((campaign_info[1], campaign_info[2], campaign_info[3], campaign_info[4]))
 
             return campaigns
 
@@ -133,9 +135,9 @@ class DAL:
         self.cursor.execute(f"SELECT COUNT(*) FROM votes_{campaign_id}")
         return self.cursor.fetchone()[0]
 
-    def store_aggregated_tally(self, campaign_id, candidate_id, encrypted_tally):
+    def store_aggregated_tally(self, campaign_id, nominee_id, encrypted_tally):
         self.cursor.execute(
-            f"INSERT OR REPLACE INTO aggregated_votes_{campaign_id} VALUES ({candidate_id}, {encrypted_tally})"
+            f"INSERT OR REPLACE INTO aggregated_votes_{campaign_id} VALUES (?, ?)", (nominee_id, encrypted_tally)
         )
 
     def get_public_key(self, voter_id):
@@ -144,7 +146,7 @@ class DAL:
         return row[0] if row else None
 
     def get_aggregated_tallies(self, campaign_id):
-        self.cursor.execute(f"SELECT candidate_id, encrypted_tally FROM aggregated_votes_{campaign_id}")
+        self.cursor.execute(f"SELECT nominee_id, encrypted_tally FROM aggregated_votes_{campaign_id}")
         return {row[0]: row[1] for row in self.cursor.fetchall()}
 
 

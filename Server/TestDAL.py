@@ -1,9 +1,11 @@
+import json
 import unittest
 import sqlite3
 import os
 from time import time
 
 from DAL import DAL
+
 
 def table_exists(table_name, dal):
     return bool(
@@ -32,11 +34,21 @@ class TestDAL(unittest.TestCase):
         self.assertTrue(all(table in tables for table in expected_tables))
 
     def test_add_campaign(self):
-        self.dal.add_campaign("Test Campaign", time(), time() + 86400)
-        self.dal.cursor.execute("SELECT * FROM campaigns WHERE campaign_id=1")
+        self.dal.add_campaign("Test Campaign", 1000, 2000, "public key1234", "private key4321")
+        self.dal.cursor.execute("SELECT * FROM campaigns WHERE name='Test Campaign'")
         campaign = self.dal.cursor.fetchone()
+
         self.assertIsNotNone(campaign)
         self.assertEqual(campaign[1], "Test Campaign")
+        self.assertEqual(campaign[2], 1000)
+        self.assertEqual(campaign[3], 2000)
+        self.assertEqual(campaign[4], "public key1234")
+        self.assertEqual(campaign[5], "private key4321")
+
+        self.dal.cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = self.dal.cursor.fetchall()
+        expected_tables = [('voters',), ('admins',), ('campaigns',)]
+        self.assertTrue(all(table in tables for table in expected_tables))
 
     def test_add_voter(self):
         self.dal.add_voter("test_user", "test_password", "test_public_key")
@@ -44,13 +56,18 @@ class TestDAL(unittest.TestCase):
         voter = self.dal.cursor.fetchone()
         self.assertIsNotNone(voter)
         self.assertEqual(voter[1], "test_user")
+        self.assertEqual(voter[2], "test_password")
+        self.assertEqual(voter[3], "test_public_key")
 
-    # def test_add_admin(self):
-    #     self.dal.add_admin("admin_user", "admin_password", "admin_public_key")
-    #     self.dal.cursor.execute("SELECT * FROM admins WHERE username='admin_user'")
-    #     admin = self.dal.cursor.fetchone()
-    #     self.assertIsNotNone(admin)
-    #     self.assertEqual(admin[1], "admin_user")
+    def test_add_admin(self):
+        self.dal.add_admin("admin_user", "admin_password", "admin_public_key")
+        self.dal.cursor.execute("SELECT * FROM admins WHERE username='admin_user'")
+        admin = self.dal.cursor.fetchone()
+        self.assertIsNotNone(admin)
+
+        self.assertEqual(admin[1], "admin_user")
+        self.assertEqual(admin[2], "admin_password")
+        self.assertEqual(admin[3], "admin_public_key")
 
     def test_create_campaign_tables(self):
         self.dal.create_campaign_tables(1)
@@ -70,20 +87,34 @@ class TestDAL(unittest.TestCase):
 
     def test_add_vote(self):
         self.dal.create_campaign_tables(1)
-        self.dal.add_vote(1, "test_nonce", 2, "encrypted_vote")
+        self.dal.add_vote("test_nonce", 2, 1, "encrypted_vote")
         self.dal.cursor.execute("SELECT * FROM votes_1 WHERE nonce='test_nonce'")
         vote = self.dal.cursor.fetchone()
         self.assertIsNotNone(vote)
 
+        self.assertEqual(vote[0], "test_nonce")
+        self.assertEqual(vote[1], 2)
+        self.assertEqual(vote[2], "encrypted_vote")
+        self.assertEqual(vote[3], int(time()))
+
     def test_get_encrypted_votes_batch(self):
         self.dal.create_campaign_tables(1)
-        self.dal.add_vote(1, "test_nonce", "encrypted_vote", int(time()))
+        vote = {
+            "type": "VOTE_REQUEST",
+            "encrypted_vote": "hi",
+            "signature": "bomba",
+            "nonce": "hi",
+            "voter_id": 2,
+            "campaign_id": 1
+        }
+
+        self.dal.add_vote("test_nonce", 2, 1, json.dumps(vote))
         votes = self.dal.get_encrypted_votes_batch(1, 10, 0)
         self.assertEqual(len(votes), 1)
 
     def test_get_total_votes_count(self):
         self.dal.create_campaign_tables(1)
-        self.dal.add_vote(1, "test_nonce", "encrypted_vote", int(time()))
+        self.dal.add_vote("test_nonce", 2, 1, "encrypted_vote")
         total_votes = self.dal.get_total_votes_count(1)
         self.assertEqual(total_votes, 1)
 

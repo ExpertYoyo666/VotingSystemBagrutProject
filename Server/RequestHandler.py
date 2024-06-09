@@ -2,6 +2,7 @@ import json
 from enum import Enum
 
 from DAL import DAL
+from VoteHandler import generate_keys, validate_vote_signature, tally_votes_in_batches, decrypt_results
 
 
 class RequestType(Enum):
@@ -108,6 +109,11 @@ class RequestHandler:
         return response
 
     def handle_vote(self, request):
+        """voter_id = request["voter_id"]
+
+        public_key_pem = self.dal.get_public_key(voter_id)
+        if validate_vote(public_key_pem):
+            dal.add_vote(campaign_id, nonce, voter_id, json.dumps(encrypted_vote))"""
         return 1
 
     def handle_campaign_list_request(self, request, is_admin):
@@ -125,8 +131,9 @@ class RequestHandler:
         campaign_name = request["name"]
         start_timestamp = request["start_timestamp"]
         end_timestamp = request["end_timestamp"]
+        public_key, private_key = generate_keys()
 
-        self.dal.add_campaign(campaign_name, start_timestamp, end_timestamp)
+        self.dal.add_campaign(campaign_name, start_timestamp, end_timestamp, public_key, private_key)
 
         response = {
             "type": RequestType.GENERIC_RESPONSE,
@@ -198,8 +205,8 @@ class RequestHandler:
 if __name__ == '__main__':
     r = RequestHandler()
     x = {
-        "type": "REG_REQUEST",
+        "type": "AUTH_REQUEST",
         "username": "yoyo666",
         "password": "bomba!1234"
     }
-    print(r.handle_request(json.dumps(x)))
+    print(r.handle_request(json.dumps(x), {"is_admin": False, "is_auth": True}))
