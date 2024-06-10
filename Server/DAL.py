@@ -19,6 +19,7 @@ class DAL:
         self.cursor.execute("CREATE TABLE IF NOT EXISTS admins"
                             "(admin_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT)")
 
+        # Add Admin account to allow system accesss
         self.add_admin("admin", "admin")
 
         self.cursor.execute("CREATE TABLE IF NOT EXISTS campaigns"
@@ -89,13 +90,15 @@ class DAL:
         self.cursor.execute(f"INSERT INTO campaign_nominees_{campaign_id} (nominee_name) VALUES (?)", (nominee_name,))
 
     def assign_voter_to_campaign(self, voter_id, campaign_id):
-        self.cursor.execute(f"INSERT INTO campaign_voters_{campaign_id} VALUES ({voter_id})")
+        self.cursor.execute(f"INSERT INTO campaign_voters_{campaign_id} VALUES (?)", (voter_id,))
 
     def add_nonce(self, nonce, campaign_id):
-        self.cursor.execute(f"INSERT INTO nonces_{campaign_id} VALUES ({nonce})")
+        self.cursor.execute(f"INSERT INTO nonces_{campaign_id} VALUES (?)", (nonce,))
 
     def nonce_exists(self, nonce, campaign_id):
-        self.cursor.execute(f"SELECT EXISTS (SELECT * FROM nonces_{campaign_id} where nonce={nonce})")
+        self.cursor.execute(f"SELECT EXISTS (SELECT 1 FROM nonces_{campaign_id} WHERE nonce = ?)", (nonce,))
+        result = self.cursor.fetchone()
+        return result[0] if result else False
 
     def get_voter(self, username):
         self.cursor.execute("SELECT * FROM voters WHERE username=(?)", (username,))
@@ -145,7 +148,7 @@ class DAL:
         )
 
     def get_public_key(self, voter_id):
-        self.cursor.execute(f"SELECT public_key FROM voters WHERE voter_id={voter_id}")
+        self.cursor.execute("SELECT public_key FROM voters WHERE voter_id = ?", (voter_id,))
         row = self.cursor.fetchone()
         return row[0] if row else None
 

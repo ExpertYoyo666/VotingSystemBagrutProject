@@ -55,14 +55,13 @@ class TestDAL(unittest.TestCase):
         self.assertEqual(voter[3], "test_public_key")
 
     def test_add_admin(self):
-        self.dal.add_admin("admin_user", "admin_password", "admin_public_key")
+        self.dal.add_admin("admin_user", "admin_password")
         self.dal.cursor.execute("SELECT * FROM admins WHERE username='admin_user'")
         admin = self.dal.cursor.fetchone()
         self.assertIsNotNone(admin)
 
         self.assertEqual(admin[1], "admin_user")
         self.assertEqual(admin[2], "admin_password")
-        self.assertEqual(admin[3], "admin_public_key")
 
     def test_create_campaign_tables(self):
         self.dal.create_campaign_tables(1)
@@ -76,7 +75,7 @@ class TestDAL(unittest.TestCase):
         self.assertIsNotNone(voter_id)
 
     def test_get_admin(self):
-        self.dal.add_admin("admin_user", "admin_password", "admin_public_key")
+        self.dal.add_admin("admin_user", "admin_password")
         admin_id = self.dal.get_admin("admin_user")
         self.assertIsNotNone(admin_id)
 
