@@ -4,7 +4,6 @@ from time import time
 
 DB_PATH = "voting-system.sqlite"
 
-
 class DAL:
     def __init__(self, db_path=DB_PATH):
         self.db_path = db_path
@@ -148,7 +147,7 @@ class DAL:
         )
 
     def get_public_key(self, voter_id):
-        self.cursor.execute("SELECT public_key FROM voters WHERE voter_id = ?", (voter_id,))
+        self.cursor.execute("SELECT public_key FROM voters WHERE voter_id=?", (voter_id,))
         row = self.cursor.fetchone()
         return row[0] if row else None
 

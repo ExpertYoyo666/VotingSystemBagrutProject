@@ -123,7 +123,7 @@ class TestDAL(unittest.TestCase):
     def test_get_public_key(self):
         self.dal.add_voter("test_user", "test_password", "test_public_key")
         voter_id = self.dal.get_voter("test_user")
-        public_key = self.dal.get_public_key(voter_id)
+        public_key = self.dal.get_public_key(voter_id[0])
         self.assertEqual(public_key, "test_public_key")
 
     def test_get_aggregated_tallies(self):

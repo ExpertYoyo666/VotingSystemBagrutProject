@@ -14,8 +14,9 @@ CERT_FILE = 'cert.pem'
 KEY_FILE = 'key.pem'
 
 class Server:
-    def __init__(self):
-        self.request_handler = RequestHandler()
+    def __init__(self, dal):
+        self.dal = dal
+        self.request_handler = RequestHandler(self.dal)
         pass
 
     def handle_client(self, client_socket):
@@ -82,7 +83,3 @@ class Server:
             client_socket = context.wrap_socket(client_socket, server_side=True)
             client_handler_thread = threading.Thread(target=self.handle_client, args=(client_socket,))
             client_handler_thread.start()
-
-if __name__ == '__main__':
-    server = Server()
-    server.main_loop()
