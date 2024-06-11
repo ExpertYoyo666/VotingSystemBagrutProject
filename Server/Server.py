@@ -4,6 +4,7 @@ import struct
 import json
 import ssl
 
+
 from RequestHandler import RequestHandler
 
 START_MARKER = b'\x01\x02'
@@ -13,11 +14,11 @@ PORT = 1234
 CERT_FILE = 'cert.pem'
 KEY_FILE = 'key.pem'
 
+
 class Server:
     def __init__(self, dal):
         self.dal = dal
         self.request_handler = RequestHandler(self.dal)
-        pass
 
     def handle_client(self, client_socket):
         state = {
@@ -70,16 +71,16 @@ class Server:
 
     def main_loop(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind(('127.0.0.1', PORT))
-        server.listen(5)
-        print(f"Server listening on port {PORT}")
 
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
 
+        server.bind(('127.0.0.1', PORT))
+        server.listen()
+
         while True:
             client_socket, address = server.accept()
             print(f"Accepted connection from {address}")
-            client_socket = context.wrap_socket(client_socket, server_side=True)
-            client_handler_thread = threading.Thread(target=self.handle_client, args=(client_socket,))
+            wrapped_client_socket = context.wrap_socket(client_socket, server_side=True)
+            client_handler_thread = threading.Thread(target=self.handle_client, args=(wrapped_client_socket,))
             client_handler_thread.start()

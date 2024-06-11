@@ -1,7 +1,6 @@
 import json
 from enum import Enum
 
-from DAL import DAL
 from VoteHandler import generate_keys, validate_vote_signature, tally_votes_in_batches, decrypt_results
 
 
@@ -83,7 +82,7 @@ class RequestHandler:
         password = request["password"]
 
         response = {
-            "type": RequestType.AUTH_RESPONSE,
+            "type": RequestType.AUTH_RESPONSE.value,
         }
         voter = self.dal.get_voter(username)
         if voter.password == password:
@@ -100,7 +99,7 @@ class RequestHandler:
         nominees_list, public_key = self.dal.get_campaign_info(campaign_id)
 
         response = {
-            "type": RequestType.CAMPAIGN_INFO_RESPONSE,
+            "type": RequestType.CAMPAIGN_INFO_RESPONSE.value,
             "nominees": nominees_list,
             "public_key": public_key
         }
@@ -120,7 +119,7 @@ class RequestHandler:
         campaigns = self.dal.get_campaign_list(voter_id, is_admin)
 
         response = {
-            "type": RequestType.CAMPAIGN_LIST_RESPONSE,
+            "type": RequestType.CAMPAIGN_LIST_RESPONSE.value,
             "campaigns": campaigns
         }
 
@@ -138,7 +137,7 @@ class RequestHandler:
         self.dal.add_campaign(campaign_name, start_timestamp, end_timestamp, public_key_str, private_key_str)
 
         response = {
-            "type": RequestType.GENERIC_RESPONSE,
+            "type": RequestType.GENERIC_RESPONSE.value,
             "status": "SUCCESS"
         }
 
@@ -149,16 +148,17 @@ class RequestHandler:
         password = request["password"]
 
         response = {
-            "type": RequestType.ADMIN_AUTH_RESPONSE,
+            "type": RequestType.ADMIN_AUTH_RESPONSE.value,
         }
         admin = self.dal.get_admin(username)
-        if admin[2] == password:
+
+        if admin is not None and admin[2] == password:
             response["status"] = "SUCCESS"
 
             return response, admin[0], True
 
         response["status"] = "FAILED"
-        return response, admin[0], False
+        return response, None, False
 
     def handle_add_nominee(self, request):
         campaign_id = request["campaign_id"]
@@ -167,7 +167,7 @@ class RequestHandler:
         self.dal.add_nominee_to_campaign(campaign_id, name)
 
         response = {
-            "type": RequestType.GENERIC_RESPONSE,
+            "type": RequestType.GENERIC_RESPONSE.value,
             "status": "SUCCESS"
         }
 
@@ -180,7 +180,7 @@ class RequestHandler:
         self.dal.add_voter(username, password, "")
 
         response = {
-            "type": RequestType.GENERIC_RESPONSE,
+            "type": RequestType.GENERIC_RESPONSE.value,
             "status": "SUCCESS"
         }
 
@@ -196,7 +196,7 @@ class RequestHandler:
         self.dal.assign_voter_to_campaign(voter_id, campaign_id)
 
         response = {
-            "type": RequestType.GENERIC_RESPONSE,
+            "type": RequestType.GENERIC_RESPONSE.value,
             "status": "SUCCESS"
         }
 

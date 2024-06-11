@@ -7,7 +7,7 @@ DB_PATH = "voting-system.sqlite"
 class DAL:
     def __init__(self, db_path=DB_PATH):
         self.db_path = db_path
-        self.con = sqlite3.connect(self.db_path)
+        self.con = sqlite3.connect(self.db_path, check_same_thread=False)
         self.cursor = self.con.cursor()
         self.create_tables_if_needed()
 
