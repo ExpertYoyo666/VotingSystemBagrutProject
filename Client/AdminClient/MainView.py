@@ -481,6 +481,5 @@ class MainView(wx.Panel):
         self.get_results_button.Bind(event, target)
 
     def update_time(self, time_str):
-        s = self.time_st.GetLabel() + " " + time_str
-        self.time_st.SetLabel(s)
+        self.time_st.SetLabel(time_str)
 
