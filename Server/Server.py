@@ -4,7 +4,6 @@ import struct
 import json
 import ssl
 
-
 from RequestHandler import RequestHandler
 
 START_MARKER = b'\x01\x02'

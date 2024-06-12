@@ -34,9 +34,8 @@ class RequestHandler:
         is_admin = state["is_admin"]
 
         response = {
-            "type": RequestType.GENERIC_RESPONSE,
-            "status": "Fail",
-            "reason": "Invalid request"
+            "type": RequestType.GENERIC_RESPONSE.value,
+            "status": "FAILED"
         }
 
         match request["type"]:
@@ -74,6 +73,9 @@ class RequestHandler:
             case RequestType.GET_RESULTS_REQUEST.value:
                 if is_auth and is_admin:
                     response = self.handle_get_results(request)
+            case RequestType.ASSIGN_VOTER_TO_CAMPAIGN_REQUEST.value:
+                if is_auth and is_admin:
+                    response = self.handle_assign_voter_to_campaign_request(request)
 
         return response
 
@@ -115,7 +117,10 @@ class RequestHandler:
         return 1
 
     def handle_campaign_list_request(self, request, is_admin):
-        voter_id = request["voter_id"]
+        if not is_admin:
+            voter_id = request["voter_id"]
+        else:
+            voter_id = 0
         campaigns = self.dal.get_campaign_list(voter_id, is_admin)
 
         response = {
@@ -177,12 +182,14 @@ class RequestHandler:
         username = request["username"]
         password = request["password"]
 
-        self.dal.add_voter(username, password, "")
-
         response = {
-            "type": RequestType.GENERIC_RESPONSE.value,
-            "status": "SUCCESS"
+            "type": RequestType.GENERIC_RESPONSE.value
         }
+        if not self.dal.get_voter(username):
+            self.dal.add_voter(username, password, "")
+            response["status"] = "SUCCESS"
+        else:
+            response["status"] = "FAILED"
 
         return response
 
@@ -190,9 +197,10 @@ class RequestHandler:
         return 1
 
     def handle_assign_voter_to_campaign_request(self, request):
-        voter_id = request["voter_id"]
+        voter_name = request["voter_name"]
         campaign_id = request["campaign_id"]
 
+        voter_id = self.dal.get_voter(voter_name)[0]
         self.dal.assign_voter_to_campaign(voter_id, campaign_id)
 
         response = {

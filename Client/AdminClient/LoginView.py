@@ -4,10 +4,6 @@ import wx.xrc
 
 class LoginView(wx.Panel):
     def __init__(self, parent):
-        """wx.Panel.__init__(self, parent, id=wx.ID_ANY, title="Digital Voting System Admin Client - Login / Register",
-                          pos=wx.DefaultPosition, size=wx.Size(800, 600),
-                          style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)"""
-
         super(LoginView, self).__init__(parent, size=wx.Size(800, 600), pos=wx.DefaultPosition,
                                         style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)
 

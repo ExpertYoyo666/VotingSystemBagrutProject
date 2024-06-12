@@ -4,6 +4,7 @@ from time import time
 
 DB_PATH = "voting-system.sqlite"
 
+
 class DAL:
     def __init__(self, db_path=DB_PATH):
         self.db_path = db_path
@@ -87,12 +88,16 @@ class DAL:
 
     def add_nominee_to_campaign(self, campaign_id, nominee_name):
         self.cursor.execute(f"INSERT INTO campaign_nominees_{campaign_id} (nominee_name) VALUES (?)", (nominee_name,))
+        self.con.commit()
 
     def assign_voter_to_campaign(self, voter_id, campaign_id):
-        self.cursor.execute(f"INSERT INTO campaign_voters_{campaign_id} VALUES (?)", (voter_id,))
+        self.cursor.execute(f"INSERT INTO campaign_voters_{campaign_id} (voter_id, has_voted) VALUES (?, ?)",
+                            (voter_id, 0))
+        self.con.commit()
 
     def add_nonce(self, nonce, campaign_id):
         self.cursor.execute(f"INSERT INTO nonces_{campaign_id} VALUES (?)", (nonce,))
+        self.con.commit()
 
     def nonce_exists(self, nonce, campaign_id):
         self.cursor.execute(f"SELECT EXISTS (SELECT 1 FROM nonces_{campaign_id} WHERE nonce = ?)", (nonce,))
@@ -145,6 +150,7 @@ class DAL:
         self.cursor.execute(
             f"INSERT OR REPLACE INTO aggregated_votes_{campaign_id} VALUES (?, ?)", (nominee_id, encrypted_tally)
         )
+        self.con.commit()
 
     def get_public_key(self, voter_id):
         self.cursor.execute("SELECT public_key FROM voters WHERE voter_id=?", (voter_id,))

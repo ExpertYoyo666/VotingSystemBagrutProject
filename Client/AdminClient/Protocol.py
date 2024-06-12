@@ -45,6 +45,7 @@ class Protocol:
         context.verify_mode = ssl.CERT_NONE
 
         sock = socket.create_connection((HOST, PORT))
+        sock.settimeout(10)
         wrapped_sock = context.wrap_socket(sock, server_hostname=HOST)
         self.sock = wrapped_sock
 
@@ -89,6 +90,19 @@ class Protocol:
         except ConnectionResetError:
             return
 
+    def get_campaigns_list(self):
+        request = {
+            "type": RequestType.CAMPAIGN_LIST_REQUEST.value
+        }
+
+        self.send_message(request)
+
+        response = self.receive_server_response()
+
+        if response["type"] == RequestType.CAMPAIGN_LIST_RESPONSE.value:
+            return response["campaigns"]
+        return []
+
     def auth(self, username, password):
         request = {
             "type": RequestType.ADMIN_AUTH_REQUEST.value,
@@ -103,5 +117,70 @@ class Protocol:
         if response["type"] == RequestType.ADMIN_AUTH_RESPONSE.value and response["status"] == "SUCCESS":
             return True
         return False
+
+    def add_campaign(self, campaign_name, start_timestamp, end_timestamp):
+        request = {
+            "type": RequestType.ADD_CAMPAIGN_REQUEST.value,
+            "name": campaign_name,
+            "start_timestamp": start_timestamp,
+            "end_timestamp": end_timestamp
+        }
+
+        self.send_message(request)
+
+        response = self.receive_server_response()
+
+        if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
+            return True
+        return False
+
+    def add_voter(self, voter_name, voter_password):
+        request = {
+            "type": RequestType.ADD_VOTER_REQUEST.value,
+            "username": voter_name,
+            "password": voter_password,
+        }
+
+        self.send_message(request)
+
+        response = self.receive_server_response()
+
+        if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
+            return True
+        return False
+
+    def add_voter_to_campaign(self, voter_name, campaign_id):
+        request = {
+            "type": RequestType.ASSIGN_VOTER_TO_CAMPAIGN_REQUEST.value,
+            "voter_name": voter_name,
+            "campaign_id": campaign_id,
+        }
+
+        self.send_message(request)
+
+        response = self.receive_server_response()
+
+        if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
+            return True
+        return False
+
+    def add_nominee_to_campaign(self, nominee_name, campaign_id):
+        request = {
+            "type": RequestType.ADD_NOMINEE_REQUEST.value,
+            "name": nominee_name,
+            "campaign_id": campaign_id,
+        }
+
+        self.send_message(request)
+
+        response = self.receive_server_response()
+
+        if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
+            return True
+        return False
+
+
+
+
 
 
