@@ -70,7 +70,7 @@ class MainFrame(wx.Frame):
         return self.main_view.get_add_nominee_to_campaign_input()
 
     def update_time(self):
-        self.main_view.time_st.SetLabel(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')}")
+        self.main_view.update_time(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')}")
 
     def set_welcome_message(self, username):
         self.main_view.set_welcome_message(username)

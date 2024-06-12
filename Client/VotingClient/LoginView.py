@@ -1,11 +1,9 @@
 import wx
 
 
-class VoterLoginFrame(wx.Frame):
-
+class LoginView(wx.Panel):
     def __init__(self, parent):
-        wx.Frame.__init__(self, parent, id=wx.ID_ANY, title="Digital Voting System Voter Client - Login / Register",
-                          pos=wx.DefaultPosition, size=wx.Size(800, 600),
+        wx.Panel.__init__(self, parent, pos=wx.DefaultPosition, size=wx.Size(800, 600),
                           style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)
 
         self.SetSizeHints(wx.DefaultSize, wx.DefaultSize)
@@ -116,9 +114,11 @@ class VoterLoginFrame(wx.Frame):
 
         self.Centre(wx.BOTH)
 
+    def get_username_input(self):
+        return self.username_input.GetValue()
 
-if __name__ == '__main__':
-    app = wx.App()
-    frm = VoterLoginFrame(None)
-    frm.Show()
-    app.MainLoop()
+    def get_password_input(self):
+        return self.password_input.GetValue()
+
+    def bind_login(self, event, target):
+        self.login_button.Bind(event, target)

@@ -479,3 +479,8 @@ class MainView(wx.Panel):
 
     def bind_get_results(self, event, target):
         self.get_results_button.Bind(event, target)
+
+    def update_time(self, time_str):
+        s = self.time_st.GetLabel() + " " + time_str
+        self.time_st.SetLabel(s)
+

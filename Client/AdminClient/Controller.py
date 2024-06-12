@@ -41,10 +41,8 @@ class Controller:
 
     def populate_campaign_choices(self):
         campaigns = self.request_handler.get_campaigns_list()
-        print(campaigns)
         self.view.set_campaigns_choices([campaign[1] for campaign in campaigns])
         self.model.set_campaigns(campaigns)
-        print(self.model.campaigns)
 
     def on_add_campaign(self, event):
         inputs = self.view.get_add_campaign_input()

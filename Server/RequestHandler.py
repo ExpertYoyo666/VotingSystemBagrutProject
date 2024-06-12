@@ -86,14 +86,15 @@ class RequestHandler:
         response = {
             "type": RequestType.AUTH_RESPONSE.value,
         }
+
         voter = self.dal.get_voter(username)
-        if voter.password == password:
+        if voter is not None and voter[2] == password:
             response["status"] = "SUCCESS"
 
-            return response, voter.voter_id, True
+            return response, voter[0], True
 
         response["status"] = "FAILED"
-        return response, voter.voter_id, False
+        return response, None, False
 
     def handle_campaign_info_request(self, request):
         campaign_id = request["campaign_id"]
@@ -155,8 +156,8 @@ class RequestHandler:
         response = {
             "type": RequestType.ADMIN_AUTH_RESPONSE.value,
         }
-        admin = self.dal.get_admin(username)
 
+        admin = self.dal.get_admin(username)
         if admin is not None and admin[2] == password:
             response["status"] = "SUCCESS"
 
