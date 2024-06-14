@@ -1,6 +1,7 @@
 import json
 import sqlite3
 from time import time
+import bcrypt
 
 DB_PATH = "voting-system.sqlite"
 
@@ -14,17 +15,29 @@ class DAL:
 
     def create_tables_if_needed(self):
         self.cursor.execute("CREATE TABLE IF NOT EXISTS voters"
-                            "(voter_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, public_key TEXT)")
+                            "(voter_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                            "username TEXT,"
+                            "password TEXT,"
+                            "public_key TEXT)")
 
         self.cursor.execute("CREATE TABLE IF NOT EXISTS admins"
-                            "(admin_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT)")
-
-        # Add Admin account to allow system accesss
-        self.add_admin("admin", "admin")
+                            "(admin_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                            "username TEXT,"
+                            "password TEXT)")
 
         self.cursor.execute("CREATE TABLE IF NOT EXISTS campaigns"
-                            "(campaign_id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, start_timestamp INT, end_timestamp INT,"
-                            "public_key TEXT, private_key TEXT)")
+                            "(campaign_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                            "name TEXT,"
+                            "start_timestamp INT,"
+                            "end_timestamp INT,"
+                            "public_key TEXT,"
+                            "private_key TEXT)")
+
+        # Add Admin account to allow system access
+        default_admin_username = "admin"
+        default_admin_password = "admin"
+        hashed_password = bcrypt.hashpw(default_admin_password.encode(), bcrypt.gensalt())
+        self.add_admin(default_admin_username, hashed_password)
 
     def create_campaign_tables(self, campaign_id):
         self.cursor.execute(
@@ -59,7 +72,8 @@ class DAL:
 
     def add_campaign(self, campaign_name, start_timestamp, end_timestamp, public_key, private_key):
         self.cursor.execute(
-            "INSERT INTO campaigns (name, start_timestamp, end_timestamp, public_key, private_key) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO campaigns (name, start_timestamp, end_timestamp, public_key, private_key)"
+            "VALUES (?, ?, ?, ?, ?)",
             (campaign_name, start_timestamp, end_timestamp, public_key, private_key)
         )
         self.con.commit()
@@ -81,13 +95,15 @@ class DAL:
 
     def add_vote(self, nonce, voter_id, campaign_id, encrypted_vote):
         self.cursor.execute(
-            f"INSERT INTO votes_{campaign_id} (nonce, voter_id, encrypted_vote, vote_timestamp) VALUES (?, ?, ?, ?)",
+            f"INSERT INTO votes_{campaign_id} (nonce, voter_id, encrypted_vote, vote_timestamp)"
+            "VALUES (?, ?, ?, ?)",
             (nonce, voter_id, encrypted_vote, int(time()))
         )
         self.con.commit()
 
     def add_nominee_to_campaign(self, campaign_id, nominee_name):
-        self.cursor.execute(f"INSERT INTO campaign_nominees_{campaign_id} (nominee_name) VALUES (?)", (nominee_name,))
+        self.cursor.execute(f"INSERT INTO campaign_nominees_{campaign_id} (nominee_name) VALUES (?)",
+                            (nominee_name,))
         self.con.commit()
 
     def assign_voter_to_campaign(self, voter_id, campaign_id):

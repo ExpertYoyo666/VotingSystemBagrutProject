@@ -1,6 +1,8 @@
 import json
 from enum import Enum
 
+import bcrypt as bcrypt
+
 from VoteHandler import generate_keys, validate_vote_signature, tally_votes_in_batches, decrypt_results
 
 
@@ -85,15 +87,14 @@ class RequestHandler:
 
         response = {
             "type": RequestType.AUTH_RESPONSE.value,
+            "status": "FAILED"
         }
 
         voter = self.dal.get_voter(username)
-        if voter is not None and voter[2] == password:
+        if voter is not None and bcrypt.checkpw(password.encode(), voter[2]):
             response["status"] = "SUCCESS"
-
             return response, voter[0], True
 
-        response["status"] = "FAILED"
         return response, None, False
 
     def handle_campaign_info_request(self, request):
@@ -155,15 +156,14 @@ class RequestHandler:
 
         response = {
             "type": RequestType.ADMIN_AUTH_RESPONSE.value,
+            "status": "FAILED"
         }
 
         admin = self.dal.get_admin(username)
-        if admin is not None and admin[2] == password:
+        if admin is not None and bcrypt.checkpw(password.encode(), admin[2]):
             response["status"] = "SUCCESS"
-
             return response, admin[0], True
 
-        response["status"] = "FAILED"
         return response, None, False
 
     def handle_add_nominee(self, request):
@@ -182,12 +182,13 @@ class RequestHandler:
     def handle_add_voter(self, request):
         username = request["username"]
         password = request["password"]
+        hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
         response = {
             "type": RequestType.GENERIC_RESPONSE.value
         }
         if not self.dal.get_voter(username):
-            self.dal.add_voter(username, password, "")
+            self.dal.add_voter(username, hashed_password, "")
             response["status"] = "SUCCESS"
         else:
             response["status"] = "FAILED"

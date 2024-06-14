@@ -47,7 +47,7 @@ def tally_votes_in_batches(dal, campaign_id, public_key, batch_size=1000):
         return
 
     num_candidates = len(json.loads(dal.get_encrypted_votes_batch(campaign_id, 1, 0)[0]))
-    encrypted_tallies = [paillier.EncryptedNumber(public_key, 0) for _ in range(num_candidates)]
+    encrypted_tallies = [public_key.encrypt(0) for _ in range(num_candidates)]
 
     for batch_num in range(num_batches):
         print(f"Processing batch {batch_num + 1} of {num_batches}")
