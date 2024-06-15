@@ -36,14 +36,14 @@ class DAL:
         # Add Admin account to allow system access
         default_admin_username = "admin"
         default_admin_password = "admin"
-        hashed_password = bcrypt.hashpw(default_admin_password.encode(), bcrypt.gensalt())
-        self.add_admin(default_admin_username, hashed_password)
+        if self.get_admin(default_admin_username) is None:
+            hashed_password = bcrypt.hashpw(default_admin_password.encode(), bcrypt.gensalt())
+            self.add_admin(default_admin_username, hashed_password)
 
     def create_campaign_tables(self, campaign_id):
         self.cursor.execute(
-            f"""CREATE TABLE votes_{campaign_id} (
-                 nonce TEXT PRIMARY KEY, 
-                 voter_id INTEGER,
+            f"""CREATE TABLE votes_{campaign_id} ( 
+                 voter_id INTEGER PRIMARY KEY,
                  encrypted_vote TEXT,
                  vote_timestamp INTEGER)"""
         )
@@ -68,7 +68,7 @@ class DAL:
 
         self.cursor.execute(
             f"""CREATE TABLE nonces_{campaign_id} (
-                nonce INTEGER PRIMARY KEY)""")
+                nonce TEXT PRIMARY KEY)""")
 
     def add_campaign(self, campaign_name, start_timestamp, end_timestamp, public_key, private_key):
         self.cursor.execute(
@@ -95,10 +95,12 @@ class DAL:
 
     def add_vote(self, nonce, voter_id, campaign_id, encrypted_vote):
         self.cursor.execute(
-            f"INSERT INTO votes_{campaign_id} (nonce, voter_id, encrypted_vote, vote_timestamp)"
-            "VALUES (?, ?, ?, ?)",
-            (nonce, voter_id, encrypted_vote, int(time()))
+            f"INSERT INTO votes_{campaign_id} (voter_id, encrypted_vote, vote_timestamp)"
+            "VALUES (?, ?, ?)",
+            (voter_id, encrypted_vote, int(time()))
         )
+        self.cursor.execute(
+            f"INSERT INTO nonces_{campaign_id} (nonce) VALUES (?)", (nonce,))
         self.con.commit()
 
     def add_nominee_to_campaign(self, campaign_id, nominee_name):

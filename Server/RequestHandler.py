@@ -110,14 +110,20 @@ class RequestHandler:
         return response
 
     def handle_vote(self, request, voter_id):
-        # campaign_id = request["campaign_id"
-        # public_key_pem = self.dal.get_public_key(voter_id)
-        # if validate_vote(public_key_pem):
-        #     dal.add_vote(campaign_id, nonce, voter_id, json.dumps(encrypted_vote))"""
+        campaign_id = request["campaign_id"]
+        nonce = request["nonce"]
+        encrypted_vote = request["encrypted_vote"]
+
         response = {
-            "type": RequestType.GENERIC_RESPONSE.value,
-            "status": "SUCCESS"
+            "type": RequestType.VOTE_RESPONSE.value,
+            "status": "FAIL",
+            "verification_code": "N/A"
         }
+
+        if validate_vote_signature(request):
+            print("Vote is valid")
+            self.dal.add_vote(nonce, voter_id, campaign_id, json.dumps(encrypted_vote))
+            response["status"] = "SUCCESS"
 
         return response
 

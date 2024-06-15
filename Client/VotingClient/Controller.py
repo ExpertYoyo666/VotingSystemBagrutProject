@@ -55,10 +55,9 @@ class Controller:
             return
 
         success = self.request_handler.vote(campaign_id, nominee_id, num_candidates, self.model.public_key)
-        title = "Vote Result"
-        if success:
+        if success == "SUCCESS":
             message = "Success."
         else:
             message = "Failed."
 
-        display_popup_message(message, title)
+        display_popup_message(message, "Vote Result")

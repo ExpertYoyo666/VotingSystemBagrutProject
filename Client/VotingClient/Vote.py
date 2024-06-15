@@ -51,6 +51,8 @@ class Vote:
             "campaign_id": campaign_id
         }
 
+        print(json.dumps(data_to_sign).encode())
+
         # Sign the data
         signature = self.private_key.sign(
             json.dumps(data_to_sign).encode(),
@@ -71,26 +73,3 @@ class Vote:
         }
 
         return vote_message
-#
-# if __name__ == "__main__":
-#     # Example usage
-#     voter_id = 'voter1'
-#     campaign_id = 'campaign1'
-#     candidate_index = 2
-#
-#     # Initialize the client
-#     client = VotingClient(voter_id)
-#
-#     # Generate RSA keys and register the public key (example)
-#     public_pem = client.generate_keys()
-#     print(f"Public Key for Registration:\n{public_pem}")
-#
-#     # Set the Paillier public key (example)
-#     # This should be obtained from the server
-#     paillier_public_key, _ = paillier.generate_paillier_keypair()
-#     client.set_paillier_public_key(paillier_public_key)
-#
-#     # Create and print the vote message
-#     vote_message = client.create_vote(campaign_id, candidate_index)
-#     print(f"Vote Message:\n{json.dumps(vote_message, indent=2)}")
-#
