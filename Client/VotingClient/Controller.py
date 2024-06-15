@@ -1,35 +1,22 @@
 import wx
 
+
 def display_popup_message(message, title="Voting Client"):
     popup_window = wx.MessageDialog(None, message, title, wx.STAY_ON_TOP)
     popup_window.ShowModal()
+
 
 class Controller:
     def __init__(self, model, view, request_handler):
         self.model = model
         self.view = view
         self.request_handler = request_handler
-        self.public_key = None
-        self.campaigns = []
-        self.nominees = []
 
         self.view.show_login_view()
 
         self.view.bind_login(wx.EVT_BUTTON, self.on_login)
         self.view.bind_vote(wx.EVT_BUTTON, self.on_vote)
         self.view.bind_campaign_choice(wx.EVT_CHOICE, self.on_campaign_choice)
-
-    def get_campaign_id_from_name(self, campaign_name):
-        for campaign in self.campaigns:
-            if campaign[1] == campaign_name:
-                return campaign[0]
-        return None
-
-    def get_nominee_id_from_name(self, nominee_name):
-        for nominee in self.nominees:
-            if nominee[1] == nominee_name:
-                return nominee[0]
-        return None
 
     def on_login(self, event):
         username, password = self.view.get_login_credentials()
@@ -40,9 +27,8 @@ class Controller:
             self.model.toggle_auth()
             self.update_time()
             self.view.set_welcome_message(username)
-            # self.populate_campaign_choices()
-            self.campaigns = self.request_handler.get_campaigns_list()
-            self.view.set_campaign_choices([campaign[1] for campaign in self.campaigns])
+            self.model.campaigns = self.request_handler.get_campaigns_list()
+            self.view.set_campaign_choices([campaign[1] for campaign in self.model.campaigns])
             self.view.Layout()
 
     def update_time(self):
@@ -52,23 +38,23 @@ class Controller:
     def on_campaign_choice(self, event):
         campaign_name = self.view.get_campaign_choice()
 
-        campaign_id = self.get_campaign_id_from_name(campaign_name)
+        campaign_id = self.model.get_campaign_id_from_name(campaign_name)
 
-        self.nominees, self.public_key = self.request_handler.get_campaign_info(campaign_id)
-        self.view.set_nominee_choices([nominee[1] for nominee in self.nominees])
+        self.model.nominees, self.model.public_key = self.request_handler.get_campaign_info(campaign_id)
+        self.view.set_nominee_choices([nominee[1] for nominee in self.model.nominees])
 
     def on_vote(self, event):
         campaign_name = self.view.get_campaign_choice()
         nominee_name = self.view.get_nominee_choice()
-        campaign_id = self.get_campaign_id_from_name(campaign_name)
-        nominee_id = self.get_nominee_id_from_name(nominee_name)
-        num_candidates = len(self.nominees)
+        campaign_id = self.model.get_campaign_id_from_name(campaign_name)
+        nominee_id = self.model.get_nominee_id_from_name(nominee_name)
+        num_candidates = len(self.model.nominees)
 
         if campaign_id is None or nominee_id is None:
             display_popup_message("Invalid campaign or nominee.")
             return
 
-        success = self.request_handler.vote(campaign_id, nominee_id, num_candidates, self.public_key)
+        success = self.request_handler.vote(campaign_id, nominee_id, num_candidates, self.model.public_key)
         title = "Vote Result"
         if success:
             message = "Success."

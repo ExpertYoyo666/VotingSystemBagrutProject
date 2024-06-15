@@ -97,6 +97,7 @@ class MainView(wx.Panel):
 
     def get_campaign_choice(self):
         return self.campaign_choice.GetStringSelection()
+
     def set_campaign_choices(self, campaigns):
         self.campaign_choice.SetItems(campaigns)
         self.Layout()

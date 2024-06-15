@@ -6,6 +6,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import serialization
 import phe.paillier as paillier
 
+
 class Vote:
     def __init__(self):
         self.private_key = None
