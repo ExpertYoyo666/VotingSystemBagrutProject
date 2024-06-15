@@ -56,7 +56,7 @@ class Controller:
 
         success = self.request_handler.vote(campaign_id, nominee_id, num_candidates, self.model.public_key)
         title = "Vote Result"
-        if success:
+        if success == "FAILED":
             message = "Success."
         else:
             message = "Failed."

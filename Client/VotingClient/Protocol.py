@@ -141,7 +141,7 @@ class Protocol:
 
         if response["type"] == RequestType.VOTE_RESPONSE.value:
             return response["status"]
-        return "FAILURE"
+        return "FAILED"
 
 
 

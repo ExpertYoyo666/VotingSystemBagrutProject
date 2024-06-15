@@ -26,6 +26,7 @@ class RequestType(Enum):
     ADMIN_AUTH_REQUEST = "ADMIN_AUTH_REQUEST"
     ADMIN_AUTH_RESPONSE = "ADMIN_AUTH_RESPONSE"
     ADD_CAMPAIGN_REQUEST = "ADD_CAMPAIGN_REQUEST"
+    ACTIVATE_CAMPAIGN_REQUEST = "ACTIVATE_CAMPAIGN_REQUEST"
     ASSIGN_VOTER_TO_CAMPAIGN_REQUEST = "ASSIGN_VOTER_TO_CAMPAIGN_REQUEST"
     ADD_VOTER_REQUEST = "ADD_VOTER_REQUEST"
     ADD_NOMINEE_REQUEST = "ADD_NOMINEE_REQUEST"
@@ -124,6 +125,20 @@ class Protocol:
             "name": campaign_name,
             "start_timestamp": start_timestamp,
             "end_timestamp": end_timestamp
+        }
+
+        self.send_message(request)
+
+        response = self.receive_server_response()
+
+        if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
+            return True
+        return False
+
+    def activate_campaign(self, campaign_id):
+        request = {
+            "type": RequestType.ACTIVATE_CAMPAIGN_REQUEST.value,
+            "campaign_id": campaign_id
         }
 
         self.send_message(request)
