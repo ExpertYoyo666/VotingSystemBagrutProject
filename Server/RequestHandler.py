@@ -17,6 +17,7 @@ class RequestType(Enum):
     ADMIN_AUTH_REQUEST = "ADMIN_AUTH_REQUEST"
     ADMIN_AUTH_RESPONSE = "ADMIN_AUTH_RESPONSE"
     ADD_CAMPAIGN_REQUEST = "ADD_CAMPAIGN_REQUEST"
+    ACTIVATE_CAMPAIGN_REQUEST = "ACTIVATE_CAMPAIGN_REQUEST"
     ASSIGN_VOTER_TO_CAMPAIGN_REQUEST = "ASSIGN_VOTER_TO_CAMPAIGN_REQUEST"
     ADD_VOTER_REQUEST = "ADD_VOTER_REQUEST"
     ADD_NOMINEE_REQUEST = "ADD_NOMINEE_REQUEST"
@@ -65,6 +66,9 @@ class RequestHandler:
             case RequestType.ADD_CAMPAIGN_REQUEST.value:
                 if is_auth and is_admin:
                     response = self.handle_add_campaign(request)
+            case RequestType.ACTIVATE_CAMPAIGN_REQUEST.value:
+                if is_auth and is_admin:
+                    response = self.handle_activate_campaign(request)
             case RequestType.ADD_NOMINEE_REQUEST.value:
                 if is_auth and is_admin:
                     response = self.handle_add_nominee(request)
@@ -120,6 +124,9 @@ class RequestHandler:
             "verification_code": "N/A"
         }
 
+        if self.dal_campaign_info()[2]:
+            print("Campaign not active!")
+
         if validate_vote_signature(request):
             print("Vote is valid")
             self.dal.add_vote(nonce, voter_id, campaign_id, json.dumps(encrypted_vote))
@@ -155,6 +162,18 @@ class RequestHandler:
 
         return response
 
+    def handle_activate_campaign(self, request):
+        campaign_id = request["campaign_id"]
+
+        self.dal.activate_campaign(campaign_id)
+
+        response = {
+            "type": RequestType.GENERIC_RESPONSE.value,
+            "status": "SUCCESS"
+        }
+
+        return response
+
     def handle_admin_auth(self, request):
         username = request["username"]
         password = request["password"]
@@ -175,12 +194,17 @@ class RequestHandler:
         campaign_id = request["campaign_id"]
         name = request["name"]
 
-        self.dal.add_nominee_to_campaign(campaign_id, name)
-
+        is_activated = self.dal.get_campaign_info(campaign_id)[2]
         response = {
-            "type": RequestType.GENERIC_RESPONSE.value,
-            "status": "SUCCESS"
+            "type": RequestType.GENERIC_RESPONSE.value
         }
+
+        if not is_activated:
+            self.dal.add_nominee_to_campaign(campaign_id, name)
+
+            response["status"] = "SUCCESS"
+        else:
+            response["status"] = "FAILED"
 
         return response
 

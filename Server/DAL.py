@@ -30,6 +30,7 @@ class DAL:
                             "name TEXT,"
                             "start_timestamp INT,"
                             "end_timestamp INT,"
+                            "is_activated INT,"
                             "public_key TEXT,"
                             "private_key TEXT)")
 
@@ -72,12 +73,18 @@ class DAL:
 
     def add_campaign(self, campaign_name, start_timestamp, end_timestamp, public_key, private_key):
         self.cursor.execute(
-            "INSERT INTO campaigns (name, start_timestamp, end_timestamp, public_key, private_key)"
-            "VALUES (?, ?, ?, ?, ?)",
-            (campaign_name, start_timestamp, end_timestamp, public_key, private_key)
+            "INSERT INTO campaigns (name, start_timestamp, end_timestamp, is_activated, public_key, private_key)"
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (campaign_name, start_timestamp, end_timestamp, 0, public_key, private_key)
         )
         self.con.commit()
         self.create_campaign_tables(self.cursor.lastrowid)
+
+    def activate_campaign(self, campaign_id):
+        self.cursor.execute(
+            "UPDATE campaigns SET is_activated = 1 WHERE campaign_id = ?", (campaign_id,)
+        )
+        self.con.commit()
 
     def add_voter(self, username, password, public_key):
         self.cursor.execute(
@@ -134,9 +141,10 @@ class DAL:
         nominees = self.cursor.execute(f"SELECT * FROM campaign_nominees_{campaign_id}").fetchall()
         nominees = [row for row in nominees]
 
-        public_key = self.cursor.execute(f"SELECT public_key FROM campaigns"
-                                         f" WHERE campaign_id={campaign_id}").fetchone()[0]
-        return nominees, public_key
+        public_key, is_activated = self.cursor.execute(f"SELECT public_key, is_activated FROM campaigns"
+                                                       f" WHERE campaign_id={campaign_id}").fetchone()
+
+        return nominees, public_key, is_activated
 
     def get_campaign_list(self, voter_id, is_admin):
         self.cursor.execute("SELECT campaign_id, name, start_timestamp, end_timestamp FROM campaigns")
@@ -149,8 +157,9 @@ class DAL:
         for campaign in all_campaigns:
             campaign_id = campaign[0]
             voter_count = self.cursor.execute(
-                f"SELECT COUNT(*) FROM campaign_voters_{campaign_id} WHERE voter_id=?", (voter_id, )).fetchone()[0]
-            if voter_count > 0:
+                f"SELECT COUNT(*) FROM campaign_voters_{campaign_id} WHERE voter_id=?", (voter_id,)).fetchone()[0]
+            is_activated = self.get_campaign_info(campaign_id)[2]
+            if voter_count > 0 and is_activated:
                 campaigns.append(campaign)
 
         return campaigns

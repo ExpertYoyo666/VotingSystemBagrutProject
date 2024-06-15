@@ -18,6 +18,7 @@ class Controller:
 
         self.view.bind_login(wx.EVT_BUTTON, self.on_login)
         self.view.bind_add_campaign(wx.EVT_BUTTON, self.on_add_campaign)
+        self.view.bind_activate_campaign(wx.EVT_BUTTON, self.on_activate_campaign)
         self.view.bind_add_voter(wx.EVT_BUTTON, self.on_add_voter)
         self.view.bind_add_voter_to_campaign(wx.EVT_BUTTON, self.on_add_voter_to_campaign)
         self.view.bind_add_nominee_to_campaign(wx.EVT_BUTTON, self.on_add_nominee_to_campaign)
@@ -52,6 +53,19 @@ class Controller:
         if success:
             message = "Success."
             self.populate_campaign_choices()
+        else:
+            message = "Failed."
+
+        display_popup_message(message, title)
+
+    def on_activate_campaign(self, event):
+        campaign_index = self.view.get_activate_campaign_input()
+        campaign_id = self.model.get_campaign_by_index(campaign_index)[0]
+        success = self.request_handler.activate_campaign(campaign_id)
+
+        title = "Activate Campaign Result"
+        if success:
+            message = "Success."
         else:
             message = "Failed."
 

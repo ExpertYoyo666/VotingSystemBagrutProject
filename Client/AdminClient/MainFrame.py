@@ -39,6 +39,9 @@ class MainFrame(wx.Frame):
     def bind_add_campaign(self, event, target):
         self.main_view.bind_add_campaign(event, target)
 
+    def bind_activate_campaign(self, event, target):
+        self.main_view.bind_activate_campaign(event, target)
+
     def bind_add_voter(self, event, target):
         self.main_view.bind_add_voter(event, target)
 
@@ -56,6 +59,9 @@ class MainFrame(wx.Frame):
 
     def get_add_campaign_input(self):
         return self.main_view.get_add_campaign_input()
+
+    def get_activate_campaign_input(self):
+        return self.main_view.get_activate_campaign_input()
 
     def get_add_voter_input(self):
         return self.main_view.get_add_voter_input()
@@ -77,14 +83,3 @@ class MainFrame(wx.Frame):
 
     def set_campaigns_choices(self, campaigns):
         self.main_view.set_campaigns_choices(campaigns)
-
-
-if __name__ == '__main__':
-    app = wx.App()
-    model = Model()
-    main_frame = MainFrame("Digital Voting System Admin Client")
-    main_frame.Show()
-    protocol = Protocol()
-    c = Controller(model, main_frame, protocol)
-
-    app.MainLoop()

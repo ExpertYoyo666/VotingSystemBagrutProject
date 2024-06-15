@@ -144,6 +144,57 @@ class MainView(wx.Panel):
 
         left_body_sizer.Add(add_campaign_sizer, 0, wx.EXPAND, 5)
 
+        activate_campaign_sizer = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY, wx.EmptyString), wx.VERTICAL)
+
+        activate_campaign_title_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.activate_campaign_st = wx.StaticText(activate_campaign_sizer.GetStaticBox(), wx.ID_ANY,
+                                                  "Activate Campaign", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.activate_campaign_st.Wrap(-1)
+
+        self.activate_campaign_st.SetFont(
+            wx.Font(12, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, True, wx.EmptyString))
+
+        activate_campaign_title_sizer.Add(self.activate_campaign_st, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+
+        activate_campaign_sizer.Add(activate_campaign_title_sizer, 1, wx.EXPAND, 5)
+
+        activate_campaign_input_sizer = wx.FlexGridSizer(0, 2, 0, 0)
+        activate_campaign_input_sizer.SetFlexibleDirection(wx.BOTH)
+        activate_campaign_input_sizer.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_SPECIFIED)
+
+        self.activate_campaign_name_st = wx.StaticText(activate_campaign_sizer.GetStaticBox(), wx.ID_ANY,
+                                                       "Campaign Name:", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.activate_campaign_name_st.Wrap(-1)
+
+        self.activate_campaign_name_st.SetFont(
+            wx.Font(12, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, True, wx.EmptyString))
+
+        activate_campaign_input_sizer.Add(self.activate_campaign_name_st, 0, wx.ALL, 5)
+
+        self.activate_campaign_name_choice = wx.Choice(activate_campaign_sizer.GetStaticBox(), wx.ID_ANY,
+                                                       wx.DefaultPosition, wx.Size(180, -1), [], 0)
+        self.activate_campaign_name_choice.SetSelection(0)
+        self.activate_campaign_name_choice.SetFont(
+            wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString))
+
+        activate_campaign_input_sizer.Add(self.activate_campaign_name_choice, 0, wx.ALL, 5)
+
+        activate_campaign_sizer.Add(activate_campaign_input_sizer, 1, wx.ALIGN_CENTER, 5)
+
+        activate_campaign_submit_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.activate_campaign_button = wx.Button(activate_campaign_sizer.GetStaticBox(), wx.ID_ANY, "Submit",
+                                                  wx.DefaultPosition, wx.DefaultSize, 0)
+        self.activate_campaign_button.SetFont(
+            wx.Font(12, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString))
+
+        activate_campaign_submit_sizer.Add(self.activate_campaign_button, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+
+        activate_campaign_sizer.Add(activate_campaign_submit_sizer, 1, wx.EXPAND, 5)
+
+        left_body_sizer.Add(activate_campaign_sizer, 1, wx.EXPAND, 5)
+
         add_voter_sizer = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY, wx.EmptyString), wx.VERTICAL)
 
         add_sizer_title_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -433,6 +484,11 @@ class MainView(wx.Panel):
 
         return campaign_name, start_time, end_time
 
+    def get_activate_campaign_input(self):
+        campaign_name = self.activate_campaign_name_choice.GetCurrentSelection()
+
+        return campaign_name
+
     def get_add_voter_input(self):
         name = self.add_voter_name_input.GetValue()
         password = self.add_voter_password_input.GetValue()
@@ -461,12 +517,16 @@ class MainView(wx.Panel):
         self.Layout()
 
     def set_campaigns_choices(self, campaigns):
+        self.activate_campaign_name_choice.SetItems(campaigns)
         self.add_voter_to_campaign_campaign_name_choice.SetItems(campaigns)
         self.get_results_campaign_name_choice.SetItems(campaigns)
         self.add_nominee_to_campaign_campaign_name_choice.SetItems(campaigns)
 
     def bind_add_campaign(self, event, target):
         self.add_campaign_button.Bind(event, target)
+
+    def bind_activate_campaign(self, event, target):
+        self.activate_campaign_button.Bind(event, target)
 
     def bind_add_voter(self, event, target):
         self.add_voter_button.Bind(event, target)
@@ -482,4 +542,3 @@ class MainView(wx.Panel):
 
     def update_time(self, time_str):
         self.time_st.SetLabel(time_str)
-

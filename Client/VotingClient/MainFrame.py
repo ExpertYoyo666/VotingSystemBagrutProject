@@ -61,14 +61,3 @@ class MainFrame(wx.Frame):
 
     def set_nominee_choices(self, nominees):
         self.main_view.set_nominee_choices(nominees)
-
-
-if __name__ == '__main__':
-    app = wx.App()
-    model = Model()
-    main_frame = MainFrame("Digital Voting System Voter Client")
-    main_frame.Show()
-    protocol = Protocol()
-    c = Controller(model, main_frame, protocol)
-
-    app.MainLoop()
