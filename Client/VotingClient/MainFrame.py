@@ -36,6 +36,11 @@ class MainFrame(wx.Frame):
     def bind_login(self, event, target):
         self.login_view.bind_login(event, target)
 
+    def bind_vote(self, event, target):
+        self.main_view.bind_vote(event, target)
+    def bind_campaign_choice(self, event, target):
+        self.main_view.campaign_choice.Bind(event, target)
+
     def get_login_credentials(self):
         return self.login_view.get_username_input(), self.login_view.get_password_input()
 
@@ -44,6 +49,18 @@ class MainFrame(wx.Frame):
 
     def set_welcome_message(self, username):
         self.main_view.set_welcome_message(username)
+
+    def get_campaign_choice(self):
+        return self.main_view.campaign_choice.GetStringSelection()
+
+    def get_nominee_choice(self):
+        return self.main_view.nominee_choice.GetStringSelection()
+
+    def set_campaign_choices(self, campaigns):
+        self.main_view.set_campaign_choices(campaigns)
+
+    def set_nominee_choices(self, nominees):
+        self.main_view.set_nominee_choices(nominees)
 
 
 if __name__ == '__main__':

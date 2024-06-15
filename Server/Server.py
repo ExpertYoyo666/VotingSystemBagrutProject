@@ -22,7 +22,8 @@ class Server:
     def handle_client(self, client_socket):
         state = {
             "is_auth": False,
-            "is_admin": False
+            "is_admin": False,
+            "uid": None
         }
         while True:
             try:

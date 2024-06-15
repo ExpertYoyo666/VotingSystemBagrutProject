@@ -4,6 +4,8 @@ import struct
 from enum import Enum
 import socket
 
+from Client.VotingClient.Vote import Vote
+
 HOST = '127.0.0.1'
 PORT = 1234
 
@@ -23,14 +25,6 @@ class RequestType(Enum):
     VOTE_RESPONSE = "VOTE_RESPONSE"
     CAMPAIGN_LIST_REQUEST = "CAMPAIGN_LIST_REQUEST"
     CAMPAIGN_LIST_RESPONSE = "CAMPAIGN_LIST_RESPONSE"
-    ADMIN_AUTH_REQUEST = "ADMIN_AUTH_REQUEST"
-    ADMIN_AUTH_RESPONSE = "ADMIN_AUTH_RESPONSE"
-    ADD_CAMPAIGN_REQUEST = "ADD_CAMPAIGN_REQUEST"
-    ASSIGN_VOTER_TO_CAMPAIGN_REQUEST = "ASSIGN_VOTER_TO_CAMPAIGN_REQUEST"
-    ADD_VOTER_REQUEST = "ADD_VOTER_REQUEST"
-    ADD_NOMINEE_REQUEST = "ADD_NOMINEE_REQUEST"
-    GET_RESULTS_REQUEST = "GET_RESULTS_REQUEST"
-
     GENERIC_RESPONSE = "GENERIC_RESPONSE"
 
 
@@ -38,6 +32,8 @@ class Protocol:
     def __init__(self):
         self.sock = None
         self.connect_to_server()
+        self.voteHandler = Vote()
+        self.voteHandler.generate_keys()
 
     def connect_to_server(self):
         context = ssl.create_default_context()
@@ -103,6 +99,20 @@ class Protocol:
             return response["campaigns"]
         return []
 
+    def get_campaign_info(self, campaign_id):
+        request = {
+            "type": RequestType.CAMPAIGN_INFO_REQUEST.value,
+            "campaign_id": campaign_id
+        }
+
+        self.send_message(request)
+
+        response = self.receive_server_response()
+
+        if response["type"] == RequestType.CAMPAIGN_INFO_RESPONSE.value:
+            return response["nominees"], response["public_key"]
+        return [], None
+
     def auth(self, username, password):
         request = {
             "type": RequestType.AUTH_REQUEST.value,
@@ -118,7 +128,20 @@ class Protocol:
             return True
         return False
 
+    def vote(self, campaign_id, nominee_id, num_candidates, public_key):
 
+        self.voteHandler.set_paillier_public_key(public_key)
+
+        request = self.voteHandler.create_vote(campaign_id, nominee_id-1, num_candidates)
+        request["type"] = RequestType.VOTE_REQUEST.value
+
+        self.send_message(request)
+
+        response = self.receive_server_response()
+
+        if response["type"] == RequestType.VOTE_RESPONSE.value:
+            return response["status"]
+        return "FAILURE"
 
 
 

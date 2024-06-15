@@ -1,6 +1,5 @@
 import json
 from enum import Enum
-
 import bcrypt as bcrypt
 
 from VoteHandler import generate_keys, validate_vote_signature, tally_votes_in_batches, decrypt_results
@@ -49,13 +48,13 @@ class RequestHandler:
                         state["uid"] = voter_id
             case RequestType.CAMPAIGN_LIST_REQUEST.value:
                 if is_auth:
-                    response = self.handle_campaign_list_request(request, is_admin)
+                    response = self.handle_campaign_list_request(request, is_admin, state["uid"])
             case RequestType.CAMPAIGN_INFO_REQUEST.value:
                 if is_auth:
                     response = self.handle_campaign_info_request(request)
             case RequestType.VOTE_REQUEST.value:
                 if is_auth and not is_admin:
-                    response = self.handle_vote(request)
+                    response = self.handle_vote(request, state["uid"])
             case RequestType.ADMIN_AUTH_REQUEST.value:
                 if not is_auth:
                     response, admin_id, auth_ok = self.handle_admin_auth(request)
@@ -110,19 +109,19 @@ class RequestHandler:
 
         return response
 
-    def handle_vote(self, request):
-        """voter_id = request["voter_id"]
+    def handle_vote(self, request, voter_id):
+        # campaign_id = request["campaign_id"
+        # public_key_pem = self.dal.get_public_key(voter_id)
+        # if validate_vote(public_key_pem):
+        #     dal.add_vote(campaign_id, nonce, voter_id, json.dumps(encrypted_vote))"""
+        response = {
+            "type": RequestType.GENERIC_RESPONSE.value,
+            "status": "SUCCESS"
+        }
 
-        public_key_pem = self.dal.get_public_key(voter_id)
-        if validate_vote(public_key_pem):
-            dal.add_vote(campaign_id, nonce, voter_id, json.dumps(encrypted_vote))"""
-        return 1
+        return response
 
-    def handle_campaign_list_request(self, request, is_admin):
-        if not is_admin:
-            voter_id = request["voter_id"]
-        else:
-            voter_id = 0
+    def handle_campaign_list_request(self, request, is_admin, voter_id):
         campaigns = self.dal.get_campaign_list(voter_id, is_admin)
 
         response = {

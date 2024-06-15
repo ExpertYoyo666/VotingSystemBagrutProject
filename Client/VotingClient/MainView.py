@@ -92,3 +92,15 @@ class MainView(wx.Panel):
         self.welcome_st.SetLabel(f"Welcome {username}")
         self.Layout()
 
+    def bind_vote(self, event, target):
+        self.vote_button.Bind(event, target)
+
+    def get_campaign_choice(self):
+        return self.campaign_choice.GetStringSelection()
+    def set_campaign_choices(self, campaigns):
+        self.campaign_choice.SetItems(campaigns)
+        self.Layout()
+
+    def set_nominee_choices(self, nominees):
+        self.nominee_choice.SetItems(nominees)
+        self.Layout()

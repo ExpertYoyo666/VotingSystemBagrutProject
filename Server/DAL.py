@@ -137,7 +137,7 @@ class DAL:
         return nominees, public_key
 
     def get_campaign_list(self, voter_id, is_admin):
-        self.cursor.execute("SELECT * FROM campaigns")
+        self.cursor.execute("SELECT campaign_id, name, start_timestamp, end_timestamp FROM campaigns")
         all_campaigns = self.cursor.fetchall()
         if is_admin:
             return all_campaigns
@@ -147,7 +147,7 @@ class DAL:
         for campaign in all_campaigns:
             campaign_id = campaign[0]
             voter_count = self.cursor.execute(
-                "SELECT COUNT(*) FROM campaign_voters_? WHERE voter_id=?", (campaign_id, voter_id)).fetchone()[0]
+                f"SELECT COUNT(*) FROM campaign_voters_{campaign_id} WHERE voter_id=?", (voter_id, )).fetchone()[0]
             if voter_count > 0:
                 campaigns.append(campaign)
 
