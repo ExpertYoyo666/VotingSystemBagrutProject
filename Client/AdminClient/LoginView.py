@@ -42,14 +42,13 @@ class LoginView(wx.Panel):
 
         sizer3 = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.login_register_st = wx.StaticText(self, wx.ID_ANY, "Login / Register", wx.DefaultPosition, wx.DefaultSize,
-                                               0)
-        self.login_register_st.Wrap(-1)
+        self.login_st = wx.StaticText(self, wx.ID_ANY, "Login Page", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.login_st.Wrap(-1)
 
-        self.login_register_st.SetFont(
-            wx.Font(18, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString))
+        self.login_st.SetFont(
+            wx.Font(22, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString))
 
-        sizer3.Add(self.login_register_st, 0, wx.ALIGN_CENTER | wx.ALL, 0)
+        sizer3.Add(self.login_st, 0, wx.ALIGN_CENTER | wx.ALL, 0)
 
         sizer2.Add(sizer3, 1, wx.ALIGN_CENTER | wx.ALL, 5)
 
@@ -94,12 +93,6 @@ class LoginView(wx.Panel):
             wx.Font(10, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD, False, wx.EmptyString))
 
         sizer5.Add(self.login_button, 0, wx.ALL, 5)
-
-        self.register_button = wx.Button(self, wx.ID_ANY, "Register", wx.DefaultPosition, wx.DefaultSize, 0)
-        self.register_button.SetFont(
-            wx.Font(10, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD, False, wx.EmptyString))
-
-        sizer5.Add(self.register_button, 0, wx.ALL, 5)
 
         sizer2.Add(sizer5, 0, wx.ALIGN_CENTER, 5)
 
