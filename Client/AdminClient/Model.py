@@ -1,4 +1,3 @@
-from phe import paillier
 from DAL import DAL
 
 

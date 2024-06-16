@@ -12,8 +12,10 @@ class Controller:
         self.view = view
         self.request_handler = request_handler
 
+        # start by showing login screen
         self.view.show_login_view()
 
+        # bind buttons to function in both screens
         self.view.bind_login(wx.EVT_BUTTON, self.on_login)
         self.view.bind_vote(wx.EVT_BUTTON, self.on_vote)
         self.view.bind_campaign_choice(wx.EVT_CHOICE, self.on_campaign_choice)

@@ -16,8 +16,10 @@ class Controller:
         self.view = view
         self.request_handler = request_handler
 
+        # start by showing login screen
         self.view.show_login_view()
 
+        # bind buttons to function in both screens
         self.view.bind_login(wx.EVT_BUTTON, self.on_login)
         self.view.bind_add_campaign(wx.EVT_BUTTON, self.on_add_campaign)
         self.view.bind_activate_campaign(wx.EVT_BUTTON, self.on_activate_campaign)
@@ -27,9 +29,11 @@ class Controller:
         self.view.bind_get_results(wx.EVT_BUTTON, self.on_get_results)
 
     def on_login(self, event):
+        # get username and password and try to auth
         username, password = self.view.get_login_credentials()
         success = self.request_handler.auth(username, password)
 
+        # if success, move to main view, init the main screen and save that we are logged in
         if success:
             self.view.show_main_view()
             self.model.toggle_auth()
@@ -39,6 +43,7 @@ class Controller:
             self.populate_campaign_choices()
 
     def update_time(self):
+        # every second call this again to update the time text
         self.view.update_time()
         wx.CallLater(1000, self.update_time)
 
@@ -51,7 +56,7 @@ class Controller:
         inputs = self.view.get_add_campaign_input()
         public_key, private_key = paillier.generate_paillier_keypair()
         public_key_str = f'{public_key.n}'
-        private_key_str = f'{private_key.p},{private_key.q}'
+        private_key_str = f'{private_key.p}, {private_key.q}'
         uid = str(uuid.uuid4())
         success = self.request_handler.add_campaign(inputs["campaign_name"], uid,
                                                     inputs["start_time"], inputs["end_time"], public_key_str)

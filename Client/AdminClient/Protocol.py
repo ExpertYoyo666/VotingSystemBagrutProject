@@ -41,16 +41,20 @@ class Protocol:
         self.connect_to_server()
 
     def connect_to_server(self):
+        # create context for ssl
         context = ssl.create_default_context()
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
 
+        # create connection
         sock = socket.create_connection((HOST, PORT))
         sock.settimeout(10)
+        # add ssl
         wrapped_sock = context.wrap_socket(sock, server_hostname=HOST)
         self.sock = wrapped_sock
 
     def recvall(self, n):
+        """Receives n bytes from server"""
         data = b''
         while len(data) < n:
             packet = self.sock.recv(n - len(data))
@@ -60,29 +64,32 @@ class Protocol:
         return data
 
     def send_message(self, message):
+        # encode message as json
         message = json.dumps(message).encode('utf-8')
+        # add start and end markers, convert message length to bytes
         msg = (START_MARKER +
                struct.pack('>I', len(message)) +
                message +
                END_MARKER)
+        # send message to server
         self.sock.sendall(msg)
 
     def receive_server_response(self):
         try:
-            # Read and validate the start marker
+            # read and validate the start marker
             if self.recvall(len(START_MARKER)) != START_MARKER:
                 return
 
-            # Read the message length
+            # read the message length
             raw_msg_len = self.recvall(4)
             if not raw_msg_len:
                 return
             msg_len = struct.unpack('>I', raw_msg_len)[0]
 
-            # Read the message payload
+            # read the message payload
             payload = json.loads(self.recvall(msg_len).decode('utf-8'))
 
-            # Read and validate the end marker
+            # read and validate the end marker
             if self.recvall(len(END_MARKER)) != END_MARKER:
                 return
 
@@ -92,6 +99,7 @@ class Protocol:
             return
 
     def get_campaigns_list(self):
+        # create request
         request = {
             "type": RequestType.CAMPAIGN_LIST_REQUEST.value
         }
@@ -100,11 +108,13 @@ class Protocol:
 
         response = self.receive_server_response()
 
+        # check success
         if response["type"] == RequestType.CAMPAIGN_LIST_RESPONSE.value:
             return response["campaigns"]
         return []
 
     def auth(self, username, password):
+        # create request
         request = {
             "type": RequestType.ADMIN_AUTH_REQUEST.value,
             "username": username,
@@ -115,11 +125,13 @@ class Protocol:
 
         response = self.receive_server_response()
 
+        # check success
         if response["type"] == RequestType.ADMIN_AUTH_RESPONSE.value and response["status"] == "SUCCESS":
             return True
         return False
 
     def add_campaign(self, campaign_name, uid, start_timestamp, end_timestamp, public_key):
+        # create request
         request = {
             "type": RequestType.ADD_CAMPAIGN_REQUEST.value,
             "name": campaign_name,
@@ -133,11 +145,13 @@ class Protocol:
 
         response = self.receive_server_response()
 
+        # check success
         if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
             return True
         return False
 
     def activate_campaign(self, campaign_id):
+        # create request
         request = {
             "type": RequestType.ACTIVATE_CAMPAIGN_REQUEST.value,
             "campaign_id": campaign_id
@@ -147,11 +161,13 @@ class Protocol:
 
         response = self.receive_server_response()
 
+        # check success
         if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
             return True
         return False
 
     def add_voter(self, voter_name, voter_password):
+        # create request
         request = {
             "type": RequestType.ADD_VOTER_REQUEST.value,
             "username": voter_name,
@@ -162,11 +178,13 @@ class Protocol:
 
         response = self.receive_server_response()
 
+        # check success
         if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
             return True
         return False
 
     def add_voter_to_campaign(self, voter_name, campaign_id):
+        # create request
         request = {
             "type": RequestType.ASSIGN_VOTER_TO_CAMPAIGN_REQUEST.value,
             "voter_name": voter_name,
@@ -177,11 +195,13 @@ class Protocol:
 
         response = self.receive_server_response()
 
+        # check success
         if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
             return True
         return False
 
     def add_nominee_to_campaign(self, nominee_name, campaign_id):
+        # create request
         request = {
             "type": RequestType.ADD_NOMINEE_REQUEST.value,
             "name": nominee_name,
@@ -192,6 +212,7 @@ class Protocol:
 
         response = self.receive_server_response()
 
+        # check success
         if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
             return True
         return False
