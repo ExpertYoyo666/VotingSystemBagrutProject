@@ -1,6 +1,7 @@
 import json
 from enum import Enum
 import bcrypt as bcrypt
+import shortuuid
 
 from VoteHandler import validate_vote_signature, tally_votes_in_batches
 
@@ -122,15 +123,33 @@ class RequestHandler:
         response = {
             "type": RequestType.VOTE_RESPONSE.value,
             "status": "FAIL",
-            "verification_code": "N/A"
+            "reason": "N/A",
+            "receipt": "0000-0000-0000-0000"
         }
 
-        if self.dal.get_campaign_info(campaign_id)['is_active']:
+        if self.dal.get_voter_has_voted(voter_id, campaign_id) == 1:
+            print("Voter has already voted!")
+            response["reason"] = "Voter has already voted!"
+            return response
+
+        if self.dal.nonce_exists(nonce, campaign_id):
+            print("Nonce already exists!")
+            response["reason"] = "Vote replay rejected!"
+            return response
+
+        if self.dal.get_campaign_info(campaign_id)['is_active'] != 1:
             print("Campaign not active!")
+            response["reason"] = "Campaign not active!"
+            return response
 
         if validate_vote_signature(request):
             print("Vote is valid")
-            self.dal.add_vote(nonce, voter_id, campaign_id, json.dumps(encrypted_vote))
+            short_uuid = shortuuid.ShortUUID().random(length=16)
+            vote_receipt = '-'.join(short_uuid[i:i + 4] for i in range(0, 16, 4))
+            self.dal.add_vote(nonce, voter_id, campaign_id, vote_receipt, json.dumps(encrypted_vote))
+            self.dal.set_voter_has_voted(voter_id, campaign_id)
+            response["reason"] = "Vote accepted!"
+            response["receipt"] = vote_receipt
             response["status"] = "SUCCESS"
 
         return response

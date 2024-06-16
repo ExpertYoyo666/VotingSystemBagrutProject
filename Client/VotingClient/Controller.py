@@ -46,8 +46,10 @@ class Controller:
 
     def on_campaign_choice(self, event):
         campaign_name = self.view.get_campaign_choice()
+        print(campaign_name)
 
         campaign_id = self.model.get_campaign_id_from_name(campaign_name)
+        print(campaign_id)
 
         self.model.nominees, self.model.public_key = self.request_handler.get_campaign_info(campaign_id)
         self.view.set_nominee_choices([nominee[1] for nominee in self.model.nominees])
@@ -63,9 +65,9 @@ class Controller:
             display_popup_message("Invalid campaign or nominee.")
             return
 
-        success = self.request_handler.vote(campaign_id, nominee_id, num_candidates, self.model.public_key)
+        success, receipt = self.request_handler.vote(campaign_id, nominee_id, num_candidates, self.model.public_key)
         if success == "SUCCESS":
-            message = "Success."
+            message = "Success\nReceipt: " + receipt
         else:
             message = "Failed."
 
