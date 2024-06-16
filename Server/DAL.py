@@ -158,11 +158,17 @@ class DAL:
         return self.cursor.fetchone()
 
     def get_campaign_info(self, campaign_id):
+        campaign_info = self.cursor.execute(f"SELECT * FROM campaigns"
+                                            f" WHERE campaign_id={campaign_id}").fetchone()
+
         nominees = self.cursor.execute(f"SELECT * FROM campaign_nominees_{campaign_id}").fetchall()
         nominees = [row for row in nominees]
 
-        campaign_info = self.cursor.execute(f"SELECT * FROM campaigns"
-                                            f" WHERE campaign_id={campaign_id}").fetchone()
+        voter_count = self.cursor.execute(
+            f"SELECT COUNT(*) FROM campaign_voters_{campaign_id}").fetchone()[0]
+
+        votes_count = self.cursor.execute(
+            f"SELECT COUNT(*) FROM votes_{campaign_id}").fetchone()[0]
 
         return {
             "campaign_id": campaign_info[0],
@@ -172,7 +178,9 @@ class DAL:
             "end_timestamp": campaign_info[4],
             "is_active": campaign_info[5],
             "public_key": campaign_info[6],
-            "nominees": nominees
+            "nominees": nominees,
+            "voters": voter_count,
+            "votes": votes_count
         }
 
     def get_campaign_list(self, voter_id, is_admin):

@@ -92,19 +92,6 @@ class Protocol:
         except ConnectionResetError:
             return
 
-    def get_campaigns_list(self):
-        request = {
-            "type": RequestType.CAMPAIGN_LIST_REQUEST.value
-        }
-
-        self.send_message(request)
-
-        response = self.receive_server_response()
-
-        if response["type"] == RequestType.CAMPAIGN_LIST_RESPONSE.value:
-            return response["campaigns"]
-        return []
-
     def auth(self, username, password):
         request = {
             "type": RequestType.ADMIN_AUTH_REQUEST.value,
@@ -119,6 +106,33 @@ class Protocol:
         if response["type"] == RequestType.ADMIN_AUTH_RESPONSE.value and response["status"] == "SUCCESS":
             return True
         return False
+
+    def get_campaigns_list(self):
+        request = {
+            "type": RequestType.CAMPAIGN_LIST_REQUEST.value
+        }
+
+        self.send_message(request)
+
+        response = self.receive_server_response()
+
+        if response["type"] == RequestType.CAMPAIGN_LIST_RESPONSE.value:
+            return response["campaigns"]
+        return []
+
+    def get_campaign_info(self, campaign_id):
+        request = {
+            "type": RequestType.CAMPAIGN_INFO_REQUEST.value,
+            "campaign_id": campaign_id
+        }
+
+        self.send_message(request)
+
+        response = self.receive_server_response()
+
+        if response["type"] == RequestType.CAMPAIGN_INFO_RESPONSE.value:
+            return response
+        return []
 
     def add_campaign(self, campaign_name, uid, start_timestamp, end_timestamp, public_key):
         request = {

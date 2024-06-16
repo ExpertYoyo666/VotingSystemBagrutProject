@@ -51,8 +51,6 @@ class Vote:
             "campaign_id": campaign_id
         }
 
-        print(json.dumps(data_to_sign).encode())
-
         # Sign the data
         signature = self.private_key.sign(
             json.dumps(data_to_sign).encode(),

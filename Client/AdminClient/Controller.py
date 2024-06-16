@@ -135,6 +135,8 @@ class Controller:
         campaign_remote_id = campaign[1]
         results = self.request_handler.get_campaign_results(campaign_id)
 
+        campaign_server_info = self.request_handler.get_campaign_info(campaign_id)
+
         campaign_info = self.model.get_campaign_info(campaign_remote_id)
         public_key_str = campaign_info['public_key']
         private_key_str = campaign_info['private_key']
@@ -147,5 +149,9 @@ class Controller:
                        i, tally
                        in results.items()}
 
+        print(f"Campaign '{campaign[2]}' results:")
+        print(f"Total votes: {campaign_server_info['votes']}")
+        print(f"Total voters: {campaign_server_info['voters']}")
         for i, tally in total_votes.items():
-            print(f"Total votes for candidate {i}: {tally}")
+            nominee_name = campaign_server_info['nominees'][int(i)][1]
+            print(f"Total votes for candidate {nominee_name}: {tally}")

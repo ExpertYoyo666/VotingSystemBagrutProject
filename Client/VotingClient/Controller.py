@@ -46,10 +46,8 @@ class Controller:
 
     def on_campaign_choice(self, event):
         campaign_name = self.view.get_campaign_choice()
-        print(campaign_name)
 
         campaign_id = self.model.get_campaign_id_from_name(campaign_name)
-        print(campaign_id)
 
         self.model.nominees, self.model.public_key = self.request_handler.get_campaign_info(campaign_id)
         self.view.set_nominee_choices([nominee[1] for nominee in self.model.nominees])

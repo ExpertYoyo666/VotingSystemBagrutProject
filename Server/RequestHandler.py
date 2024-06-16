@@ -105,13 +105,8 @@ class RequestHandler:
     def handle_campaign_info_request(self, request):
         campaign_id = request["campaign_id"]
 
-        campaign_info = self.dal.get_campaign_info(campaign_id)
-
-        response = {
-            "type": RequestType.CAMPAIGN_INFO_RESPONSE.value,
-            "nominees": campaign_info['nominees'],
-            "public_key": campaign_info['public_key']
-        }
+        response = self.dal.get_campaign_info(campaign_id)
+        response["type"] = RequestType.CAMPAIGN_INFO_RESPONSE.value
 
         return response
 

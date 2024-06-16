@@ -29,6 +29,7 @@ class DAL:
     def get_campaign_info(self, remote_campaign_id):
         campaign = self.cursor.execute("SELECT * FROM campaigns WHERE remote_campaign_id = ?",
                                        (remote_campaign_id,)).fetchone()
+
         return {
             "campaign_id": campaign[0],
             "remote_campaign_id": campaign[1],

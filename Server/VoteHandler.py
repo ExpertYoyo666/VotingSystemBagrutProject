@@ -27,8 +27,6 @@ def validate_vote_signature(vote_message):
         "campaign_id": campaign_id
     }
 
-    print(json.dumps(data_to_sign).encode())
-
     try:
         public_key.verify(
             signature,
@@ -66,7 +64,6 @@ def tally_votes_in_batches(dal, campaign_id, public_key_str, batch_size=1000):
     encrypted_tallies = [public_key.encrypt(0) for _ in range(num_candidates)]
 
     for batch_num in range(num_batches):
-        print(f"Processing batch {batch_num + 1} of {num_batches}")
         encrypted_votes_batch = dal.get_encrypted_votes_batch(campaign_id, batch_size, batch_num * batch_size)
 
         for vote in encrypted_votes_batch:
