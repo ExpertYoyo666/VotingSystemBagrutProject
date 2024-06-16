@@ -38,6 +38,7 @@ class MainFrame(wx.Frame):
 
     def bind_vote(self, event, target):
         self.main_view.bind_vote(event, target)
+
     def bind_campaign_choice(self, event, target):
         self.main_view.campaign_choice.Bind(event, target)
 

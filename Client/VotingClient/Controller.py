@@ -17,6 +17,8 @@ class Controller:
         self.view.bind_login(wx.EVT_BUTTON, self.on_login)
         self.view.bind_vote(wx.EVT_BUTTON, self.on_vote)
         self.view.bind_campaign_choice(wx.EVT_CHOICE, self.on_campaign_choice)
+        self.view.login_view.bind_username_input(wx.EVT_TEXT, self.on_input_change)
+        self.view.login_view.bind_password_input(wx.EVT_TEXT, self.on_input_change)
 
     def on_login(self, event):
         username, password = self.view.get_login_credentials()
@@ -34,6 +36,13 @@ class Controller:
     def update_time(self):
         self.view.update_time()
         wx.CallLater(1000, self.update_time)
+
+    def on_input_change(self, event):
+        username, password = self.view.get_login_credentials()
+        if username and password:
+            self.view.login_view.enable_login_button()
+        else:
+            self.view.login_view.disable_login_button()
 
     def on_campaign_choice(self, event):
         campaign_name = self.view.get_campaign_choice()
