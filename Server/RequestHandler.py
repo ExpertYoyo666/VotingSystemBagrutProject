@@ -2,7 +2,7 @@ import json
 from enum import Enum
 import bcrypt as bcrypt
 
-from VoteHandler import generate_keys, validate_vote_signature, tally_votes_in_batches, decrypt_results
+from VoteHandler import validate_vote_signature, tally_votes_in_batches
 
 
 class RequestType(Enum):
@@ -103,7 +103,7 @@ class RequestHandler:
     def handle_campaign_info_request(self, request):
         campaign_id = request["campaign_id"]
 
-        nominees_list, public_key = self.dal.get_campaign_info(campaign_id)
+        nominees_list, public_key, is_activated = self.dal.get_campaign_info(campaign_id)
 
         response = {
             "type": RequestType.CAMPAIGN_INFO_RESPONSE.value,
@@ -124,7 +124,7 @@ class RequestHandler:
             "verification_code": "N/A"
         }
 
-        if self.dal_campaign_info()[2]:
+        if self.dal.get_campaign_info(campaign_id)[2]:
             print("Campaign not active!")
 
         if validate_vote_signature(request):
@@ -146,14 +146,12 @@ class RequestHandler:
 
     def handle_add_campaign(self, request):
         campaign_name = request["name"]
+        campaign_id = request["id"]
         start_timestamp = request["start_timestamp"]
         end_timestamp = request["end_timestamp"]
-        public_key, private_key = generate_keys()
+        public_key = request["public_key"]
 
-        public_key_str = f'{public_key.n}'
-        private_key_str = f'{private_key.p} {private_key.q}'
-
-        self.dal.add_campaign(campaign_name, start_timestamp, end_timestamp, public_key_str, private_key_str)
+        self.dal.add_campaign(campaign_name, campaign_id, start_timestamp, end_timestamp, public_key)
 
         response = {
             "type": RequestType.GENERIC_RESPONSE.value,

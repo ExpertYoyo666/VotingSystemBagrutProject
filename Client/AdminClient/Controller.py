@@ -1,6 +1,8 @@
 import threading
+import uuid
 
 import wx
+from phe import paillier
 
 
 def display_popup_message(message, title="Admin Client - Message"):
@@ -47,11 +49,17 @@ class Controller:
 
     def on_add_campaign(self, event):
         inputs = self.view.get_add_campaign_input()
-        success = self.request_handler.add_campaign(*inputs)
+        public_key, private_key = paillier.generate_paillier_keypair()
+        public_key_str = f'{public_key.n}'
+        private_key_str = f'{private_key.p},{private_key.q}'
+        uid = str(uuid.uuid4())
+        success = self.request_handler.add_campaign(inputs["campaign_name"], uid,
+                                                    inputs["start_time"], inputs["end_time"], public_key_str)
 
         title = "Add Campaign Result"
         if success:
             message = "Success."
+            self.model.add_campaign(uid, inputs["campaign_name"], public_key_str, private_key_str)
             self.populate_campaign_choices()
         else:
             message = "Failed."
@@ -113,3 +121,11 @@ class Controller:
 
     def on_get_results(self, event):
         pass
+
+    # def decrypt_results(dal, campaign_id, private_key):
+    #     encrypted_tallies = dal.get_aggregated_tallies(campaign_id)
+    #     total_votes = {i: private_key.decrypt(paillier.EncryptedNumber(private_key.public_key(), int(tally))) for
+    #                    i, tally
+    #                    in encrypted_tallies.items()}
+    #     for i, tally in total_votes.items():
+    #         print(f"Total votes for candidate {i + 1}: {tally}")

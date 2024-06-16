@@ -1,6 +1,7 @@
 import json
 import sqlite3
 from time import time
+
 import bcrypt
 
 DB_PATH = "voting-system.sqlite"
@@ -14,25 +15,35 @@ class DAL:
         self.create_tables_if_needed()
 
     def create_tables_if_needed(self):
-        self.cursor.execute("CREATE TABLE IF NOT EXISTS voters"
-                            "(voter_id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                            "username TEXT,"
-                            "password TEXT,"
-                            "public_key TEXT)")
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS voters (
+                voter_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT,
+                password TEXT,
+                public_key TEXT
+            )
+        """)
 
-        self.cursor.execute("CREATE TABLE IF NOT EXISTS admins"
-                            "(admin_id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                            "username TEXT,"
-                            "password TEXT)")
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS admins (
+                admin_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT,
+                password TEXT
+            )
+        """)
 
-        self.cursor.execute("CREATE TABLE IF NOT EXISTS campaigns"
-                            "(campaign_id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                            "name TEXT,"
-                            "start_timestamp INT,"
-                            "end_timestamp INT,"
-                            "is_activated INT,"
-                            "public_key TEXT,"
-                            "private_key TEXT)")
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS campaigns (
+                campaign_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                id TEXT UNIQUE,
+                start_timestamp INT,
+                end_timestamp INT,
+                is_activated INT,
+                public_key TEXT
+            )
+        """)
+        self.con.commit()
 
         # Add Admin account to allow system access
         default_admin_username = "admin"
@@ -71,11 +82,11 @@ class DAL:
             f"""CREATE TABLE nonces_{campaign_id} (
                 nonce TEXT PRIMARY KEY)""")
 
-    def add_campaign(self, campaign_name, start_timestamp, end_timestamp, public_key, private_key):
+    def add_campaign(self, campaign_name, campaign_id, start_timestamp, end_timestamp, public_key):
         self.cursor.execute(
-            "INSERT INTO campaigns (name, start_timestamp, end_timestamp, is_activated, public_key, private_key)"
+            "INSERT INTO campaigns (name, id, start_timestamp, end_timestamp, is_activated, public_key)"
             "VALUES (?, ?, ?, ?, ?, ?)",
-            (campaign_name, start_timestamp, end_timestamp, 0, public_key, private_key)
+            (campaign_name, campaign_id, start_timestamp, end_timestamp, 0, public_key)
         )
         self.con.commit()
         self.create_campaign_tables(self.cursor.lastrowid)

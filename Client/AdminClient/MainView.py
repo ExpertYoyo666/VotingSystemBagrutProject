@@ -482,7 +482,11 @@ class MainView(wx.Panel):
         end_time = wx.DateTime(year=y.GetYear(), month=y.GetMonth(), day=y.GetDay(),
                                hour=x.GetHour(), minute=x.GetMinute(), second=x.GetSecond()).GetTicks()
 
-        return campaign_name, start_time, end_time
+        return {
+            'campaign_name': campaign_name,
+            'start_time': start_time,
+            'end_time': end_time
+        }
 
     def get_activate_campaign_input(self):
         campaign_name = self.activate_campaign_name_choice.GetCurrentSelection()

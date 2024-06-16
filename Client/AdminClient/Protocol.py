@@ -119,12 +119,14 @@ class Protocol:
             return True
         return False
 
-    def add_campaign(self, campaign_name, start_timestamp, end_timestamp):
+    def add_campaign(self, campaign_name, uid, start_timestamp, end_timestamp, public_key):
         request = {
             "type": RequestType.ADD_CAMPAIGN_REQUEST.value,
             "name": campaign_name,
+            "id": uid,
             "start_timestamp": start_timestamp,
-            "end_timestamp": end_timestamp
+            "end_timestamp": end_timestamp,
+            "public_key": public_key
         }
 
         self.send_message(request)

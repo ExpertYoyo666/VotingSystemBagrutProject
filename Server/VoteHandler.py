@@ -67,12 +67,3 @@ def tally_votes_in_batches(dal, campaign_id, public_key, batch_size=1000):
 
     for i, tally in enumerate(encrypted_tallies):
         dal.store_aggregated_tally(campaign_id, i, tally.ciphertext())
-
-
-# Decrypt results
-def decrypt_results(dal, campaign_id, private_key):
-    encrypted_tallies = dal.get_aggregated_tallies(campaign_id)
-    total_votes = {i: private_key.decrypt(paillier.EncryptedNumber(private_key.public_key(), int(tally))) for i, tally
-                   in encrypted_tallies.items()}
-    for i, tally in total_votes.items():
-        print(f"Total votes for candidate {i + 1}: {tally}")
