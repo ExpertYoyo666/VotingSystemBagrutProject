@@ -44,7 +44,7 @@ class Controller:
 
     def populate_campaign_choices(self):
         campaigns = self.request_handler.get_campaigns_list()
-        self.view.set_campaigns_choices([campaign[1] for campaign in campaigns])
+        self.view.set_campaigns_choices([campaign[2] for campaign in campaigns])
         self.model.set_campaigns(campaigns)
 
     def on_add_campaign(self, event):
@@ -120,12 +120,23 @@ class Controller:
         display_popup_message(message, title)
 
     def on_get_results(self, event):
-        pass
+        campaign_index = self.view.get_get_results_input()
+        campaign = self.model.get_campaign_by_index(campaign_index)
+        campaign_id = campaign[0]
+        campaign_remote_id = campaign[1]
+        results = self.request_handler.get_campaign_results(campaign_id)
 
-    # def decrypt_results(dal, campaign_id, private_key):
-    #     encrypted_tallies = dal.get_aggregated_tallies(campaign_id)
-    #     total_votes = {i: private_key.decrypt(paillier.EncryptedNumber(private_key.public_key(), int(tally))) for
-    #                    i, tally
-    #                    in encrypted_tallies.items()}
-    #     for i, tally in total_votes.items():
-    #         print(f"Total votes for candidate {i + 1}: {tally}")
+        campaign_info = self.model.get_campaign_info(campaign_remote_id)
+        public_key_str = campaign_info['public_key']
+        private_key_str = campaign_info['private_key']
+        p_str, q_str = private_key_str.split(',')
+
+        public_key = paillier.PaillierPublicKey(int(public_key_str))
+        private_key = paillier.PaillierPrivateKey(public_key, int(p_str), int(q_str))
+
+        total_votes = {i: private_key.decrypt(paillier.EncryptedNumber(public_key, int(tally))) for
+                       i, tally
+                       in results.items()}
+
+        for i, tally in total_votes.items():
+            print(f"Total votes for candidate {i}: {tally}")

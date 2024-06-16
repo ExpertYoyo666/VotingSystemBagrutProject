@@ -22,6 +22,7 @@ class RequestType(Enum):
     ADD_VOTER_REQUEST = "ADD_VOTER_REQUEST"
     ADD_NOMINEE_REQUEST = "ADD_NOMINEE_REQUEST"
     GET_RESULTS_REQUEST = "GET_RESULTS_REQUEST"
+    GET_RESULTS_REQUEST_RESPONSE = "GET_RESULTS_REQUEST_RESPONSE"
 
     GENERIC_RESPONSE = "GENERIC_RESPONSE"
 
@@ -103,12 +104,12 @@ class RequestHandler:
     def handle_campaign_info_request(self, request):
         campaign_id = request["campaign_id"]
 
-        nominees_list, public_key, is_activated = self.dal.get_campaign_info(campaign_id)
+        campaign_info = self.dal.get_campaign_info(campaign_id)
 
         response = {
             "type": RequestType.CAMPAIGN_INFO_RESPONSE.value,
-            "nominees": nominees_list,
-            "public_key": public_key
+            "nominees": campaign_info['nominees'],
+            "public_key": campaign_info['public_key']
         }
 
         return response
@@ -124,7 +125,7 @@ class RequestHandler:
             "verification_code": "N/A"
         }
 
-        if self.dal.get_campaign_info(campaign_id)[2]:
+        if self.dal.get_campaign_info(campaign_id)['is_active']:
             print("Campaign not active!")
 
         if validate_vote_signature(request):
@@ -192,7 +193,7 @@ class RequestHandler:
         campaign_id = request["campaign_id"]
         name = request["name"]
 
-        is_activated = self.dal.get_campaign_info(campaign_id)[2]
+        is_activated = self.dal.get_campaign_info(campaign_id)['is_active']
         response = {
             "type": RequestType.GENERIC_RESPONSE.value
         }
@@ -223,7 +224,16 @@ class RequestHandler:
         return response
 
     def handle_get_results(self, request):
-        return 1
+        campaign_id = request["campaign_id"]
+        public_key_str = self.dal.get_campaign_info(campaign_id)['public_key']
+        tally_votes_in_batches(self.dal, campaign_id, public_key_str)
+        results = self.dal.get_aggregated_tallies(campaign_id)
+        response = {
+            "type": RequestType.GET_RESULTS_REQUEST_RESPONSE.value,
+            "results": results
+        }
+        print(response)
+        return response
 
     def handle_assign_voter_to_campaign_request(self, request):
         voter_name = request["voter_name"]

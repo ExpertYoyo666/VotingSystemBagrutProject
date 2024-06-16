@@ -28,7 +28,7 @@ class Controller:
             self.update_time()
             self.view.set_welcome_message(username)
             self.model.campaigns = self.request_handler.get_campaigns_list()
-            self.view.set_campaign_choices([campaign[1] for campaign in self.model.campaigns])
+            self.view.set_campaign_choices([campaign[2] for campaign in self.model.campaigns])
             self.view.Layout()
 
     def update_time(self):

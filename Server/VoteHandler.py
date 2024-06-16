@@ -46,15 +46,23 @@ def validate_vote_signature(vote_message):
 
 
 # Aggregate votes
-def tally_votes_in_batches(dal, campaign_id, public_key, batch_size=1000):
+def tally_votes_in_batches(dal, campaign_id, public_key_str, batch_size=1000):
     total_votes_count = dal.get_total_votes_count(campaign_id)
     num_batches = (total_votes_count // batch_size) + (1 if total_votes_count % batch_size != 0 else 0)
+
+    public_key = paillier.PaillierPublicKey(int(public_key_str))
 
     if total_votes_count == 0:
         print("No votes to tally.")
         return
 
-    num_candidates = len(json.loads(dal.get_encrypted_votes_batch(campaign_id, 1, 0)[0]))
+    encrypted_votes_batch = dal.get_encrypted_votes_batch(campaign_id, 1, 0)
+    if not encrypted_votes_batch:
+        print("No votes found in the first batch.")
+        return
+
+    num_candidates = len(encrypted_votes_batch[0])
+
     encrypted_tallies = [public_key.encrypt(0) for _ in range(num_candidates)]
 
     for batch_num in range(num_batches):
@@ -67,3 +75,4 @@ def tally_votes_in_batches(dal, campaign_id, public_key, batch_size=1000):
 
     for i, tally in enumerate(encrypted_tallies):
         dal.store_aggregated_tally(campaign_id, i, tally.ciphertext())
+

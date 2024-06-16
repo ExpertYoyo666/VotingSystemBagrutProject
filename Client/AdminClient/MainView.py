@@ -489,9 +489,9 @@ class MainView(wx.Panel):
         }
 
     def get_activate_campaign_input(self):
-        campaign_name = self.activate_campaign_name_choice.GetCurrentSelection()
+        campaign_index = self.activate_campaign_name_choice.GetCurrentSelection()
 
-        return campaign_name
+        return campaign_index
 
     def get_add_voter_input(self):
         name = self.add_voter_name_input.GetValue()
@@ -501,20 +501,20 @@ class MainView(wx.Panel):
 
     def get_add_voter_to_campaign_input(self):
         voter_name = self.add_voter_to_campaign_voter_name_input.GetValue()
-        campaign_name = self.add_voter_to_campaign_campaign_name_choice.GetCurrentSelection()
+        campaign_index = self.add_voter_to_campaign_campaign_name_choice.GetCurrentSelection()
 
-        return voter_name, campaign_name
+        return voter_name, campaign_index
 
     def get_get_results_input(self):
-        campaign_name = self.get_results_campaign_name_choice.GetCurrentSelection()
+        campaign_index = self.get_results_campaign_name_choice.GetCurrentSelection()
 
-        return campaign_name
+        return campaign_index
 
     def get_add_nominee_to_campaign_input(self):
         nominee_name = self.add_nominee_to_campaign_nominee_name_input.GetValue()
-        campaign_name = self.add_nominee_to_campaign_campaign_name_choice.GetCurrentSelection()
+        campaign_index = self.add_nominee_to_campaign_campaign_name_choice.GetCurrentSelection()
 
-        return nominee_name, campaign_name
+        return nominee_name, campaign_index
 
     def set_welcome_message(self, username):
         self.welcome_st.SetLabel(f"Welcome {username}")
