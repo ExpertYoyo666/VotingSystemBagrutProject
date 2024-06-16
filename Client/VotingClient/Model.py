@@ -13,7 +13,7 @@ class Model:
 
     def get_campaign_id_from_name(self, campaign_name):
         for campaign in self.campaigns:
-            if campaign[1] == campaign_name:
+            if campaign[2] == campaign_name:
                 return campaign[0]
         return None
 

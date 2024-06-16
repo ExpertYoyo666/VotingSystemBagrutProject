@@ -32,7 +32,7 @@ class LoginView(wx.Panel):
 
         sizer3 = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.login_st = wx.StaticText(self, wx.ID_ANY, "Login Page", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.login_st = wx.StaticText(self, wx.ID_ANY, "Enter login credentials", wx.DefaultPosition, wx.DefaultSize, 0)
         self.login_st.Wrap(-1)
 
         self.login_st.SetFont(
@@ -81,6 +81,7 @@ class LoginView(wx.Panel):
         self.login_button = wx.Button(self, wx.ID_ANY, "Login", wx.DefaultPosition, wx.DefaultSize, 0)
         self.login_button.SetFont(
             wx.Font(10, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD, False, wx.EmptyString))
+        self.login_button.Enable(False)
 
         sizer5.Add(self.login_button, 0, wx.ALL, 5)
 
@@ -113,5 +114,17 @@ class LoginView(wx.Panel):
     def get_password_input(self):
         return self.password_input.GetValue()
 
+    def bind_username_input(self, event, target):
+        self.username_input.Bind(event, target)
+
+    def bind_password_input(self, event, target):
+        self.password_input.Bind(event, target)
+
     def bind_login(self, event, target):
         self.login_button.Bind(event, target)
+
+    def enable_login_button(self):
+        self.login_button.Enable(True)
+
+    def disable_login_button(self):
+        self.login_button.Enable(False)

@@ -57,6 +57,7 @@ class DAL:
             f"""CREATE TABLE votes_{campaign_id} ( 
                  voter_id INTEGER PRIMARY KEY,
                  encrypted_vote TEXT,
+                 receipt TEXT,
                  vote_timestamp INTEGER)"""
         )
 
@@ -111,11 +112,11 @@ class DAL:
         )
         self.con.commit()
 
-    def add_vote(self, nonce, voter_id, campaign_id, encrypted_vote):
+    def add_vote(self, nonce, voter_id, campaign_id, receipt, encrypted_vote):
         self.cursor.execute(
-            f"INSERT INTO votes_{campaign_id} (voter_id, encrypted_vote, vote_timestamp)"
-            "VALUES (?, ?, ?)",
-            (voter_id, encrypted_vote, int(time()))
+            f"INSERT INTO votes_{campaign_id} (voter_id, encrypted_vote, receipt, vote_timestamp)"
+            "VALUES (?, ?, ?, ?)",
+            (voter_id, encrypted_vote, receipt, int(time()))
         )
         self.cursor.execute(
             f"INSERT INTO nonces_{campaign_id} (nonce) VALUES (?)", (nonce,))
@@ -130,6 +131,14 @@ class DAL:
         self.cursor.execute(f"INSERT INTO campaign_voters_{campaign_id} (voter_id, has_voted) VALUES (?, ?)",
                             (voter_id, 0))
         self.con.commit()
+
+    def set_voter_has_voted(self, voter_id, campaign_id):
+        self.cursor.execute(f"UPDATE campaign_voters_{campaign_id} SET has_voted = 1 WHERE voter_id = ?", (voter_id,))
+        self.con.commit()
+
+    def get_voter_has_voted(self, voter_id, campaign_id):
+        self.cursor.execute(f"SELECT has_voted FROM campaign_voters_{campaign_id} WHERE voter_id = ?", (voter_id,))
+        return self.cursor.fetchone()[0]
 
     def add_nonce(self, nonce, campaign_id):
         self.cursor.execute(f"INSERT INTO nonces_{campaign_id} VALUES (?)", (nonce,))
@@ -149,11 +158,17 @@ class DAL:
         return self.cursor.fetchone()
 
     def get_campaign_info(self, campaign_id):
+        campaign_info = self.cursor.execute(f"SELECT * FROM campaigns"
+                                            f" WHERE campaign_id={campaign_id}").fetchone()
+
         nominees = self.cursor.execute(f"SELECT * FROM campaign_nominees_{campaign_id}").fetchall()
         nominees = [row for row in nominees]
 
-        campaign_info = self.cursor.execute(f"SELECT * FROM campaigns"
-                                            f" WHERE campaign_id={campaign_id}").fetchone()
+        voter_count = self.cursor.execute(
+            f"SELECT COUNT(*) FROM campaign_voters_{campaign_id}").fetchone()[0]
+
+        votes_count = self.cursor.execute(
+            f"SELECT COUNT(*) FROM votes_{campaign_id}").fetchone()[0]
 
         return {
             "campaign_id": campaign_info[0],
@@ -163,7 +178,9 @@ class DAL:
             "end_timestamp": campaign_info[4],
             "is_active": campaign_info[5],
             "public_key": campaign_info[6],
-            "nominees": nominees
+            "nominees": nominees,
+            "voters": voter_count,
+            "votes": votes_count
         }
 
     def get_campaign_list(self, voter_id, is_admin):

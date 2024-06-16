@@ -99,6 +99,21 @@ class Protocol:
         except ConnectionResetError:
             return
 
+    def auth(self, username, password):
+        request = {
+            "type": RequestType.ADMIN_AUTH_REQUEST.value,
+            "username": username,
+            "password": password
+        }
+
+        self.send_message(request)
+
+        response = self.receive_server_response()
+
+        if response["type"] == RequestType.ADMIN_AUTH_RESPONSE.value and response["status"] == "SUCCESS":
+            return True
+        return False
+
     def get_campaigns_list(self):
         # create request
         request = {
@@ -114,12 +129,11 @@ class Protocol:
             return response["campaigns"]
         return []
 
-    def auth(self, username, password):
+    def get_campaign_info(self, campaign_id):
         # create request
         request = {
-            "type": RequestType.ADMIN_AUTH_REQUEST.value,
-            "username": username,
-            "password": password
+            "type": RequestType.CAMPAIGN_INFO_REQUEST.value,
+            "campaign_id": campaign_id
         }
 
         self.send_message(request)
@@ -127,9 +141,9 @@ class Protocol:
         response = self.receive_server_response()
 
         # check success
-        if response["type"] == RequestType.ADMIN_AUTH_RESPONSE.value and response["status"] == "SUCCESS":
-            return True
-        return False
+        if response["type"] == RequestType.CAMPAIGN_INFO_RESPONSE.value:
+            return response
+        return []
 
     def add_campaign(self, campaign_name, uid, start_timestamp, end_timestamp, public_key):
         # create request

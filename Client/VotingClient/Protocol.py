@@ -140,8 +140,8 @@ class Protocol:
         response = self.receive_server_response()
 
         if response["type"] == RequestType.VOTE_RESPONSE.value:
-            return response["status"]
-        return "FAIL"
+            return response["status"], response["receipt"]
+        return "FAIL", ""
 
 
 

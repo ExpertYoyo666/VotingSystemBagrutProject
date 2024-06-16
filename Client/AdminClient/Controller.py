@@ -26,6 +26,8 @@ class Controller:
         self.view.bind_add_voter_to_campaign(wx.EVT_BUTTON, self.on_add_voter_to_campaign)
         self.view.bind_add_nominee_to_campaign(wx.EVT_BUTTON, self.on_add_nominee_to_campaign)
         self.view.bind_get_results(wx.EVT_BUTTON, self.on_get_results)
+        self.view.login_view.bind_username_input(wx.EVT_TEXT, self.on_input_change)
+        self.view.login_view.bind_password_input(wx.EVT_TEXT, self.on_input_change)
 
     def on_login(self, event):
         # get username and password and try to auth
@@ -45,6 +47,13 @@ class Controller:
         # every second call this again to update the time text
         self.view.update_time()
         wx.CallLater(1000, self.update_time)
+
+    def on_input_change(self, event):
+        username, password = self.view.get_login_credentials()
+        if username and password:
+            self.view.login_view.enable_login_button()
+        else:
+            self.view.login_view.disable_login_button()
 
     def populate_campaign_choices(self):
         # get all available campaigns
@@ -140,6 +149,8 @@ class Controller:
         campaign_id = campaign[0]
         campaign_remote_id = campaign[1]
         results = self.request_handler.get_campaign_results(campaign_id)
+
+        campaign_server_info = self.request_handler.get_campaign_info(campaign_id)
 
         campaign_info = self.model.get_campaign_info(campaign_remote_id)
         public_key_str = campaign_info['public_key']
