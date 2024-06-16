@@ -31,6 +31,7 @@ class RequestType(Enum):
     ADD_VOTER_REQUEST = "ADD_VOTER_REQUEST"
     ADD_NOMINEE_REQUEST = "ADD_NOMINEE_REQUEST"
     GET_RESULTS_REQUEST = "GET_RESULTS_REQUEST"
+    GET_RESULTS_REQUEST_RESPONSE = "GET_RESULTS_REQUEST_RESPONSE"
 
     GENERIC_RESPONSE = "GENERIC_RESPONSE"
 
@@ -217,6 +218,19 @@ class Protocol:
             return True
         return False
 
+    def get_campaign_results(self, campaign_id):
+        request = {
+            "type": RequestType.GET_RESULTS_REQUEST.value,
+            "campaign_id": campaign_id
+        }
+
+        self.send_message(request)
+
+        response = self.receive_server_response()
+
+        if response["type"] == RequestType.GET_RESULTS_REQUEST_RESPONSE.value:
+            return response["results"]
+        return []
 
 
 

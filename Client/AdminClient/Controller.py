@@ -1,4 +1,3 @@
-import threading
 import uuid
 
 import wx
@@ -48,19 +47,24 @@ class Controller:
         wx.CallLater(1000, self.update_time)
 
     def populate_campaign_choices(self):
+        # get all available campaigns
         campaigns = self.request_handler.get_campaigns_list()
-        self.view.set_campaigns_choices([campaign[1] for campaign in campaigns])
+        # set campaign choices in UI to be the name of all the available campaigns
+        self.view.set_campaigns_choices([campaign[2] for campaign in campaigns])
         self.model.set_campaigns(campaigns)
 
     def on_add_campaign(self, event):
         inputs = self.view.get_add_campaign_input()
-        public_key, private_key = paillier.generate_paillier_keypair()
+        public_key, private_key = paillier.generate_paillier_keypair()  # generate public and private keys
+        # save both keys as str
         public_key_str = f'{public_key.n}'
         private_key_str = f'{private_key.p}, {private_key.q}'
-        uid = str(uuid.uuid4())
+        uid = str(uuid.uuid4())  # get a random 128 bit uuid
+        # send the request
         success = self.request_handler.add_campaign(inputs["campaign_name"], uid,
                                                     inputs["start_time"], inputs["end_time"], public_key_str)
 
+        # act on success or failure
         title = "Add Campaign Result"
         if success:
             message = "Success."
@@ -72,10 +76,12 @@ class Controller:
         display_popup_message(message, title)
 
     def on_activate_campaign(self, event):
+        # send inputs and send request
         campaign_index = self.view.get_activate_campaign_input()
         campaign_id = self.model.get_campaign_by_index(campaign_index)[0]
         success = self.request_handler.activate_campaign(campaign_id)
 
+        # act on success or failure
         title = "Activate Campaign Result"
         if success:
             message = "Success."
@@ -88,6 +94,7 @@ class Controller:
         inputs = self.view.get_add_voter_input()
         success = self.request_handler.add_voter(*inputs)
 
+        # act on success or failure
         title = "Add Voter Result"
         if success:
             message = "Success."
@@ -102,6 +109,7 @@ class Controller:
         campaign_id = self.model.get_campaign_id(campaign_name)
         success = self.request_handler.add_voter_to_campaign(voter_name, campaign_id)
 
+        # act on success or failure
         title = "Add Voter To Campaign Result"
         if success:
             message = "Success."
@@ -116,6 +124,7 @@ class Controller:
         campaign_id = self.model.get_campaign_id(campaign_name)
         success = self.request_handler.add_nominee_to_campaign(nominee_name, campaign_id)
 
+        # act on success or failure
         title = "Add Nominee To Campaign Result"
         if success:
             message = "Success."
@@ -125,12 +134,26 @@ class Controller:
         display_popup_message(message, title)
 
     def on_get_results(self, event):
-        pass
+        # get campaign input and process the input
+        campaign_index = self.view.get_get_results_input()
+        campaign = self.model.get_campaign_by_index(campaign_index)
+        campaign_id = campaign[0]
+        campaign_remote_id = campaign[1]
+        results = self.request_handler.get_campaign_results(campaign_id)
 
-    # def decrypt_results(dal, campaign_id, private_key):
-    #     encrypted_tallies = dal.get_aggregated_tallies(campaign_id)
-    #     total_votes = {i: private_key.decrypt(paillier.EncryptedNumber(private_key.public_key(), int(tally))) for
-    #                    i, tally
-    #                    in encrypted_tallies.items()}
-    #     for i, tally in total_votes.items():
-    #         print(f"Total votes for candidate {i + 1}: {tally}")
+        campaign_info = self.model.get_campaign_info(campaign_remote_id)
+        public_key_str = campaign_info['public_key']
+        private_key_str = campaign_info['private_key']
+        p_str, q_str = private_key_str.split(',')
+
+        public_key = paillier.PaillierPublicKey(int(public_key_str))
+        private_key = paillier.PaillierPrivateKey(public_key, int(p_str), int(q_str))
+
+        total_votes = {i: private_key.decrypt(paillier.EncryptedNumber(public_key, int(tally))) for
+                       i, tally
+                       in results.items()}
+
+        with open(f"results_{campaign_id}", "a") as file:
+            file.write(f"Results for campaign id: {campaign_id} name: {campaign_info['name']}")
+            for i, tally in total_votes.items():
+                file.write(f"Total votes for candidate {campaign_info['nominees'][i]}: {tally}")

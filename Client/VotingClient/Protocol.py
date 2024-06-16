@@ -32,8 +32,8 @@ class Protocol:
     def __init__(self):
         self.sock = None
         self.connect_to_server()
-        self.voteHandler = Vote()
-        self.voteHandler.generate_keys()
+        self.vote_handler = Vote()
+        self.vote_handler.generate_keys()
 
     def connect_to_server(self):
         context = ssl.create_default_context()
@@ -130,9 +130,9 @@ class Protocol:
 
     def vote(self, campaign_id, nominee_id, num_candidates, public_key):
 
-        self.voteHandler.set_paillier_public_key(public_key)
+        self.vote_handler.set_paillier_public_key(public_key)
 
-        request = self.voteHandler.create_vote(campaign_id, nominee_id-1, num_candidates)
+        request = self.vote_handler.create_vote(campaign_id, nominee_id - 1, num_candidates)
         request["type"] = RequestType.VOTE_REQUEST.value
 
         self.send_message(request)

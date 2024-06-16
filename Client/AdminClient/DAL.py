@@ -13,7 +13,7 @@ class DAL:
     def create_tables_if_needed(self):
         self.cursor.execute("CREATE TABLE IF NOT EXISTS campaigns"
                             "(campaign_id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                            "remote_campaign_id INTEGER,"
+                            "remote_campaign_id TEXT,"
                             "name TEXT,"
                             "public_key TEXT,"
                             "private_key TEXT)")
@@ -27,7 +27,7 @@ class DAL:
         self.con.commit()
 
     def get_campaign_info(self, remote_campaign_id):
-        campaign = self.cursor.execute("SELECT * FROM campaigns WHERE remote_campaign_id=?",
+        campaign = self.cursor.execute("SELECT * FROM campaigns WHERE remote_campaign_id = ?",
                                        (remote_campaign_id,)).fetchone()
         return {
             "campaign_id": campaign[0],

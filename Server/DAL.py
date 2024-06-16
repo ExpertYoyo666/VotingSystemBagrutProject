@@ -152,13 +152,22 @@ class DAL:
         nominees = self.cursor.execute(f"SELECT * FROM campaign_nominees_{campaign_id}").fetchall()
         nominees = [row for row in nominees]
 
-        public_key, is_activated = self.cursor.execute(f"SELECT public_key, is_activated FROM campaigns"
-                                                       f" WHERE campaign_id={campaign_id}").fetchone()
+        campaign_info = self.cursor.execute(f"SELECT * FROM campaigns"
+                                            f" WHERE campaign_id={campaign_id}").fetchone()
 
-        return nominees, public_key, is_activated
+        return {
+            "campaign_id": campaign_info[0],
+            "name": campaign_info[1],
+            "id": campaign_info[2],
+            "start_timestamp": campaign_info[3],
+            "end_timestamp": campaign_info[4],
+            "is_active": campaign_info[5],
+            "public_key": campaign_info[6],
+            "nominees": nominees
+        }
 
     def get_campaign_list(self, voter_id, is_admin):
-        self.cursor.execute("SELECT campaign_id, name, start_timestamp, end_timestamp FROM campaigns")
+        self.cursor.execute("SELECT campaign_id, id, name, start_timestamp, end_timestamp FROM campaigns")
         all_campaigns = self.cursor.fetchall()
         if is_admin:
             return all_campaigns
@@ -169,7 +178,7 @@ class DAL:
             campaign_id = campaign[0]
             voter_count = self.cursor.execute(
                 f"SELECT COUNT(*) FROM campaign_voters_{campaign_id} WHERE voter_id=?", (voter_id,)).fetchone()[0]
-            is_activated = self.get_campaign_info(campaign_id)[2]
+            is_activated = self.get_campaign_info(campaign_id)['is_active']
             if voter_count > 0 and is_activated:
                 campaigns.append(campaign)
 
@@ -178,15 +187,16 @@ class DAL:
     def get_encrypted_votes_batch(self, campaign_id, batch_size, offset):
         self.cursor.execute(
             f"SELECT encrypted_vote FROM votes_{campaign_id} LIMIT {batch_size} OFFSET {offset}")
-        return [json.loads(row[0]) for row in self.cursor.fetchall()]  # [0]?
+        return [json.loads(row[0]) for row in self.cursor.fetchall()]
 
     def get_total_votes_count(self, campaign_id):
         self.cursor.execute(f"SELECT COUNT(*) FROM votes_{campaign_id}")
         return self.cursor.fetchone()[0]
 
     def store_aggregated_tally(self, campaign_id, nominee_id, encrypted_tally):
+        encrypted_tally_hex = hex(encrypted_tally)
         self.cursor.execute(
-            f"INSERT OR REPLACE INTO aggregated_votes_{campaign_id} VALUES (?, ?)", (nominee_id, encrypted_tally)
+            f"INSERT OR REPLACE INTO aggregated_votes_{campaign_id} VALUES (?, ?)", (nominee_id, encrypted_tally_hex)
         )
         self.con.commit()
 
@@ -197,4 +207,4 @@ class DAL:
 
     def get_aggregated_tallies(self, campaign_id):
         self.cursor.execute(f"SELECT nominee_id, encrypted_tally FROM aggregated_votes_{campaign_id}")
-        return {row[0]: row[1] for row in self.cursor.fetchall()}
+        return {row[0]: int(row[1], 16) for row in self.cursor.fetchall()}
