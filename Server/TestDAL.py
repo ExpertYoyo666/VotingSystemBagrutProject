@@ -46,7 +46,7 @@ class TestDAL(unittest.TestCase):
         self.assertTrue(all(table in tables for table in expected_tables))
 
     def test_add_voter(self):
-        self.dal.add_voter("test_user", "test_password", "test_public_key")
+        self.dal.add_voter("test_user", "test_password")
         self.dal.cursor.execute("SELECT * FROM voters WHERE username='test_user'")
         voter = self.dal.cursor.fetchone()
         self.assertIsNotNone(voter)
@@ -70,7 +70,7 @@ class TestDAL(unittest.TestCase):
         self.assertIsNotNone(votes_table)
 
     def test_get_voter(self):
-        self.dal.add_voter("test_user", "test_password", "test_public_key")
+        self.dal.add_voter("test_user", "test_password")
         voter_id = self.dal.get_voter("test_user")
         self.assertIsNotNone(voter_id)
 
@@ -119,12 +119,6 @@ class TestDAL(unittest.TestCase):
         tally = self.dal.cursor.fetchone()
         self.assertIsNotNone(tally)
         self.assertEqual(tally[1], "encrypted_tally")
-
-    def test_get_public_key(self):
-        self.dal.add_voter("test_user", "test_password", "test_public_key")
-        voter_id = self.dal.get_voter("test_user")
-        public_key = self.dal.get_public_key(voter_id[0])
-        self.assertEqual(public_key, "test_public_key")
 
     def test_get_aggregated_tallies(self):
         self.dal.create_campaign_tables(1)
