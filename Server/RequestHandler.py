@@ -23,7 +23,7 @@ class RequestType(Enum):
     ADD_VOTER_REQUEST = "ADD_VOTER_REQUEST"
     ADD_NOMINEE_REQUEST = "ADD_NOMINEE_REQUEST"
     GET_RESULTS_REQUEST = "GET_RESULTS_REQUEST"
-    GET_RESULTS_REQUEST_RESPONSE = "GET_RESULTS_REQUEST_RESPONSE"
+    GET_RESULTS_RESPONSE = "GET_RESULTS_RESPONSE"
 
     GENERIC_RESPONSE = "GENERIC_RESPONSE"
 
@@ -243,7 +243,7 @@ class RequestHandler:
         tally_votes_in_batches(self.dal, campaign_id, public_key_str)
         results = self.dal.get_aggregated_tallies(campaign_id)
         response = {
-            "type": RequestType.GET_RESULTS_REQUEST_RESPONSE.value,
+            "type": RequestType.GET_RESULTS_RESPONSE.value,
             "results": results
         }
         print(response)
