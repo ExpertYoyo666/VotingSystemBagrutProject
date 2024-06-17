@@ -164,7 +164,17 @@ class Controller:
                        i, tally
                        in results.items()}
 
-        with open(f"results_{campaign_id}", "a") as file:
-            file.write(f"Results for campaign id: {campaign_id} name: {campaign_info['name']}")
+        print(f"Campaign '{campaign[2]}' results:")
+        print(f"Total votes: {campaign_server_info['votes']}")
+        print(f"Total voters: {campaign_server_info['voters']}")
+        for i, tally in total_votes.items():
+            nominee_name = campaign_server_info['nominees'][int(i)][1]
+            print(f"Total votes for candidate {nominee_name}: {tally}")
+
+        with open(f"results_{campaign_id}", "w") as file:
+            file.write(f"Campaign '{campaign[2]}' results:\n")
+            file.write(f"Total votes: {campaign_server_info['votes']}\n")
+            file.write(f"Total voters: {campaign_server_info['voters']}\n")
             for i, tally in total_votes.items():
-                file.write(f"Total votes for candidate {campaign_info['nominees'][i]}: {tally}")
+                nominee_name = campaign_server_info['nominees'][int(i)][1]
+                file.write(f"Total votes for candidate {nominee_name}: {tally}\n")
