@@ -19,8 +19,7 @@ class DAL:
             CREATE TABLE IF NOT EXISTS voters (
                 voter_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT,
-                password TEXT,
-                public_key TEXT
+                password TEXT
             )
         """)
 
@@ -98,10 +97,10 @@ class DAL:
         )
         self.con.commit()
 
-    def add_voter(self, username, password, public_key):
+    def add_voter(self, username, password):
         self.cursor.execute(
-            "INSERT INTO voters (username, password, public_key) VALUES (?, ?, ?)",
-            (username, password, public_key)
+            "INSERT INTO voters (username, password) VALUES (?, ?)",
+            (username, password)
         )
         self.con.commit()
 
@@ -216,11 +215,6 @@ class DAL:
             f"INSERT OR REPLACE INTO aggregated_votes_{campaign_id} VALUES (?, ?)", (nominee_id, encrypted_tally_hex)
         )
         self.con.commit()
-
-    def get_public_key(self, voter_id):
-        self.cursor.execute("SELECT public_key FROM voters WHERE voter_id=?", (voter_id,))
-        row = self.cursor.fetchone()
-        return row[0] if row else None
 
     def get_aggregated_tallies(self, campaign_id):
         self.cursor.execute(f"SELECT nominee_id, encrypted_tally FROM aggregated_votes_{campaign_id}")
