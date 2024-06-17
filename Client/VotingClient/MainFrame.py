@@ -2,9 +2,6 @@ import datetime
 
 import wx
 
-from Controller import Controller
-from Model import Model
-from Protocol import Protocol
 from LoginView import LoginView
 from MainView import MainView
 
