@@ -16,6 +16,7 @@ CERT_FILE = 'cert.pem'
 KEY_FILE = 'key.pem'
 
 
+# enum for storing strings for request and response types
 class RequestType(Enum):
     AUTH_REQUEST = "AUTH_REQUEST"
     AUTH_RESPONSE = "AUTH_RESPONSE"
@@ -36,10 +37,12 @@ class Protocol:
         self.vote_handler.generate_keys()
 
     def connect_to_server(self):
+        # init context for ssl
         context = ssl.create_default_context()
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
 
+        # create ssl connection to server
         sock = socket.create_connection((HOST, PORT))
         sock.settimeout(10)
         wrapped_sock = context.wrap_socket(sock, server_hostname=HOST)
@@ -55,7 +58,9 @@ class Protocol:
         return data
 
     def send_message(self, message):
+        # encode message as json
         message = json.dumps(message).encode('utf-8')
+        # add start and end markers and add message length as bytes
         msg = (START_MARKER +
                struct.pack('>I', len(message)) +
                message +
@@ -64,20 +69,21 @@ class Protocol:
 
     def receive_server_response(self):
         try:
-            # Read and validate the start marker
+            # read and validate the start marker
             if self.recvall(len(START_MARKER)) != START_MARKER:
                 return
 
-            # Read the message length
+            # read the message length
             raw_msg_len = self.recvall(4)
             if not raw_msg_len:
                 return
+            # convert message length from bytes to int
             msg_len = struct.unpack('>I', raw_msg_len)[0]
 
-            # Read the message payload
+            # read the message payload
             payload = json.loads(self.recvall(msg_len).decode('utf-8'))
 
-            # Read and validate the end marker
+            # read and validate the end marker
             if self.recvall(len(END_MARKER)) != END_MARKER:
                 return
 
@@ -129,9 +135,10 @@ class Protocol:
         return False
 
     def vote(self, campaign_id, nominee_id, num_candidates, public_key):
-
+        # set public key
         self.vote_handler.set_paillier_public_key(public_key)
 
+        # create vote
         request = self.vote_handler.create_vote(campaign_id, nominee_id - 1, num_candidates)
         request["type"] = RequestType.VOTE_REQUEST.value
 

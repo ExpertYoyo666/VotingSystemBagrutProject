@@ -70,14 +70,13 @@ class Controller:
         private_key_str = f'{private_key.p}, {private_key.q}'
         uid = str(uuid.uuid4())  # get a random 128 bit uuid
         # send the request
-        success = self.request_handler.add_campaign(inputs["campaign_name"], uid,
-                                                    inputs["start_time"], inputs["end_time"], public_key_str)
+        success = self.request_handler.add_campaign(inputs[0], uid, inputs[1], inputs[2], public_key_str)
 
         # act on success or failure
         title = "Add Campaign Result"
         if success:
             message = "Success."
-            self.model.add_campaign(uid, inputs["campaign_name"], public_key_str, private_key_str)
+            self.model.add_campaign(uid, inputs[0], public_key_str, private_key_str)
             self.populate_campaign_choices()
         else:
             message = "Failed."
@@ -150,9 +149,12 @@ class Controller:
         campaign_remote_id = campaign[1]
         results = self.request_handler.get_campaign_results(campaign_id)
 
+        # get info on campaign from server
         campaign_server_info = self.request_handler.get_campaign_info(campaign_id)
 
+        # get info on campaign from local database
         campaign_info = self.model.get_campaign_info(campaign_remote_id)
+        # setup public and private keys
         public_key_str = campaign_info['public_key']
         private_key_str = campaign_info['private_key']
         p_str, q_str = private_key_str.split(',')
@@ -160,10 +162,12 @@ class Controller:
         public_key = paillier.PaillierPublicKey(int(public_key_str))
         private_key = paillier.PaillierPrivateKey(public_key, int(p_str), int(q_str))
 
+        # decrypt results
         total_votes = {i: private_key.decrypt(paillier.EncryptedNumber(public_key, int(tally))) for
                        i, tally
                        in results.items()}
 
+        # print results to console
         print(f"Campaign '{campaign[2]}' results:")
         print(f"Total votes: {campaign_server_info['votes']}")
         print(f"Total voters: {campaign_server_info['voters']}")
@@ -171,6 +175,7 @@ class Controller:
             nominee_name = campaign_server_info['nominees'][int(i)][1]
             print(f"Total votes for candidate {nominee_name}: {tally}")
 
+        # save results to file
         with open(f"results_{campaign_id}", "w") as file:
             file.write(f"Campaign '{campaign[2]}' results:\n")
             file.write(f"Total votes: {campaign_server_info['votes']}\n")

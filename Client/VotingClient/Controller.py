@@ -55,16 +55,19 @@ class Controller:
         self.view.set_nominee_choices([nominee[1] for nominee in self.model.nominees])
 
     def on_vote(self, event):
+        # get inputs
         campaign_name = self.view.get_campaign_choice()
         nominee_name = self.view.get_nominee_choice()
         campaign_id = self.model.get_campaign_id_from_name(campaign_name)
         nominee_id = self.model.get_nominee_id_from_name(nominee_name)
         num_candidates = len(self.model.nominees)
 
+        # check that a campaign and nominee were chosen
         if campaign_id is None or nominee_id is None:
             display_popup_message("Invalid campaign or nominee.")
             return
 
+        # do vote
         success, receipt = self.request_handler.vote(campaign_id, nominee_id, num_candidates, self.model.public_key)
         if success == "SUCCESS":
             message = "Success\nReceipt: " + receipt

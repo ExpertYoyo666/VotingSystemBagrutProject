@@ -5,20 +5,18 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
 
-# Generate Paillier keys
 def generate_keys():
     public_key, private_key = paillier.generate_paillier_keypair()
     return public_key, private_key
 
 
-# Validate a vote
 def validate_vote_signature(vote_message):
     encrypted_vote = [int(ev) for ev in vote_message['encrypted_vote']]
     nonce = vote_message['nonce']
     campaign_id = vote_message['campaign_id']
     signature = bytes.fromhex(vote_message['signature'])
 
-    # public_key = serialization.load_pem_public_key(public_key_pem.encode())
+    # load public key
     public_key = serialization.load_pem_public_key(vote_message["public_key"].encode('utf-8'))
 
     data_to_sign = {
@@ -27,6 +25,7 @@ def validate_vote_signature(vote_message):
         "campaign_id": campaign_id
     }
 
+    # verify signature
     try:
         public_key.verify(
             signature,
@@ -43,7 +42,6 @@ def validate_vote_signature(vote_message):
     return True
 
 
-# Aggregate votes
 def tally_votes_in_batches(dal, campaign_id, public_key_str, batch_size=1000):
     total_votes_count = dal.get_total_votes_count(campaign_id)
     num_batches = (total_votes_count // batch_size) + (1 if total_votes_count % batch_size != 0 else 0)
@@ -72,4 +70,3 @@ def tally_votes_in_batches(dal, campaign_id, public_key_str, batch_size=1000):
 
     for i, tally in enumerate(encrypted_tallies):
         dal.store_aggregated_tally(campaign_id, i, tally.ciphertext())
-

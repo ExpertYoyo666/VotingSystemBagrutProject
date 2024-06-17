@@ -44,7 +44,7 @@ class DAL:
         """)
         self.con.commit()
 
-        # Add Admin account to allow system access
+        # Add default admin account to allow system access
         default_admin_username = "admin"
         default_admin_password = "admin"
         if self.get_admin(default_admin_username) is None:
@@ -54,7 +54,6 @@ class DAL:
     def create_campaign_tables(self, campaign_id):
         self.cursor.execute(
             f"""CREATE TABLE votes_{campaign_id} ( 
-                 voter_id INTEGER PRIMARY KEY,
                  encrypted_vote TEXT,
                  receipt TEXT,
                  vote_timestamp INTEGER)"""
@@ -111,11 +110,11 @@ class DAL:
         )
         self.con.commit()
 
-    def add_vote(self, nonce, voter_id, campaign_id, receipt, encrypted_vote):
+    def add_vote(self, nonce, campaign_id, receipt, encrypted_vote):
         self.cursor.execute(
-            f"INSERT INTO votes_{campaign_id} (voter_id, encrypted_vote, receipt, vote_timestamp)"
-            "VALUES (?, ?, ?, ?)",
-            (voter_id, encrypted_vote, receipt, int(time()))
+            f"INSERT INTO votes_{campaign_id} (encrypted_vote, receipt, vote_timestamp)"
+            "VALUES (?, ?, ?)",
+            (encrypted_vote, receipt, int(time()))
         )
         self.cursor.execute(
             f"INSERT INTO nonces_{campaign_id} (nonce) VALUES (?)", (nonce,))
@@ -183,13 +182,15 @@ class DAL:
         }
 
     def get_campaign_list(self, voter_id, is_admin):
+        # get info from all campaigns
         self.cursor.execute("SELECT campaign_id, id, name, start_timestamp, end_timestamp FROM campaigns")
         all_campaigns = self.cursor.fetchall()
+        # if admin, no restrictions on sent campaigns
         if is_admin:
             return all_campaigns
 
+        # if not admin, return only campaigns assigned to the voter that are active
         campaigns = []
-
         for campaign in all_campaigns:
             campaign_id = campaign[0]
             voter_count = self.cursor.execute(

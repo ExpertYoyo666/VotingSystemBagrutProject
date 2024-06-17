@@ -10,75 +10,72 @@ class MainView(wx.Panel):
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
+        # title section
         title_sizer = wx.GridSizer(1, 2, 0, 0)
 
+        # welcome text
         self.welcome_st = wx.StaticText(self, wx.ID_ANY, "Welcome Voter", wx.DefaultPosition, wx.DefaultSize, 0)
         self.welcome_st.Wrap(-1)
-
         self.welcome_st.SetFont(
             wx.Font(22, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString))
 
         title_sizer.Add(self.welcome_st, 0, wx.ALIGN_CENTER, 5)
 
+        # time text
         self.time_st = wx.StaticText(self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0)
         self.time_st.Wrap(-1)
-
         self.time_st.SetFont(
             wx.Font(18, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString))
-
         title_sizer.Add(self.time_st, 0, wx.ALIGN_CENTER, 5)
 
         main_sizer.Add(title_sizer, 0, wx.EXPAND, 5)
 
+        # space between title and main section of panel
         main_sizer.Add((0, 100), 0, wx.EXPAND, 5)
 
+        # main section of panel
         choice_sizer = wx.BoxSizer(wx.VERTICAL)
 
+        # campaign text
         self.campaign_st = wx.StaticText(self, wx.ID_ANY, "Choose Campaign To Vote For", wx.DefaultPosition,
                                          wx.DefaultSize, 0)
         self.campaign_st.Wrap(-1)
-
         self.campaign_st.SetFont(
             wx.Font(24, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString))
-
         choice_sizer.Add(self.campaign_st, 0, wx.ALIGN_CENTER | wx.ALL, 5)
 
-        campaign_choiceChoices = []
-        self.campaign_choice = wx.Choice(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(300, -1), campaign_choiceChoices,
-                                         0)
+        # campaign choice
+        self.campaign_choice = wx.Choice(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(300, -1), [], 0)
         self.campaign_choice.SetSelection(0)
         self.campaign_choice.SetFont(
             wx.Font(12, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, wx.EmptyString))
-
         choice_sizer.Add(self.campaign_choice, 0, wx.ALIGN_CENTER | wx.ALL, 5)
 
         choice_sizer.Add((0, 100), 0, 0, 5)
 
+        # nominee text
         self.nominee_st = wx.StaticText(self, wx.ID_ANY, "Choose A Nominee To Vote For", wx.DefaultPosition,
                                         wx.DefaultSize, 0)
         self.nominee_st.Wrap(-1)
-
         self.nominee_st.SetFont(
             wx.Font(24, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString))
-
         choice_sizer.Add(self.nominee_st, 0, wx.ALIGN_CENTER | wx.ALL, 5)
 
-        nominee_choiceChoices = []
-        self.nominee_choice = wx.Choice(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(300, -1), nominee_choiceChoices, 0)
+        # nominee choice
+        self.nominee_choice = wx.Choice(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(300, -1), [], 0)
         self.nominee_choice.SetSelection(0)
         self.nominee_choice.SetFont(
             wx.Font(12, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, wx.EmptyString))
-
         choice_sizer.Add(self.nominee_choice, 0, wx.ALIGN_CENTER | wx.ALL, 5)
 
         main_sizer.Add(choice_sizer, 0, wx.ALIGN_CENTER, 5)
 
+        # submit section
         buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         self.vote_button = wx.Button(self, wx.ID_ANY, "Vote", wx.DefaultPosition, wx.DefaultSize, 0)
         self.vote_button.SetFont(
             wx.Font(12, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString))
-
         buttons_sizer.Add(self.vote_button, 0, wx.ALL, 5)
 
         main_sizer.Add(buttons_sizer, 0, wx.ALIGN_CENTER, 5)

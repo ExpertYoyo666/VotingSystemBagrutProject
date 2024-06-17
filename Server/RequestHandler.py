@@ -1,4 +1,5 @@
 import json
+import time
 from enum import Enum
 import bcrypt as bcrypt
 import shortuuid
@@ -115,6 +116,7 @@ class RequestHandler:
         nonce = request["nonce"]
         encrypted_vote = request["encrypted_vote"]
 
+        # initial response
         response = {
             "type": RequestType.VOTE_RESPONSE.value,
             "status": "FAIL",
@@ -122,26 +124,39 @@ class RequestHandler:
             "receipt": "0000-0000-0000-0000"
         }
 
+        # check if voter already voted.
         if self.dal.get_voter_has_voted(voter_id, campaign_id) == 1:
             print("Voter has already voted!")
             response["reason"] = "Voter has already voted!"
             return response
 
+        # check if nonce is already used
         if self.dal.nonce_exists(nonce, campaign_id):
             print("Nonce already exists!")
             response["reason"] = "Vote replay rejected!"
             return response
 
-        if self.dal.get_campaign_info(campaign_id)['is_active'] != 1:
+        # check if campaign is active
+        info = self.dal.get_campaign_info(campaign_id)
+        if info['is_active'] != 1:
             print("Campaign not active!")
             response["reason"] = "Campaign not active!"
             return response
 
+        # check vote time in relation to campaign start and end times
+        if not (info["start_timestamp"] <= time.time() <= info["end_timestamp"]):
+            response["reason"] = "Campaign didn't start yet or expired"
+            print(response["reason"])
+            return response
+
+        # validate signature
         if validate_vote_signature(request):
             print("Vote is valid")
+            # generate vote_receipt
             short_uuid = shortuuid.ShortUUID().random(length=16)
             vote_receipt = '-'.join(short_uuid[i:i + 4] for i in range(0, 16, 4))
-            self.dal.add_vote(nonce, voter_id, campaign_id, vote_receipt, json.dumps(encrypted_vote))
+            # save vote
+            self.dal.add_vote(nonce, campaign_id, vote_receipt, json.dumps(encrypted_vote))
             self.dal.set_voter_has_voted(voter_id, campaign_id)
             response["reason"] = "Vote accepted!"
             response["receipt"] = vote_receipt
@@ -229,8 +244,10 @@ class RequestHandler:
         response = {
             "type": RequestType.GENERIC_RESPONSE.value
         }
+
+        # if voter doesn't exist already
         if not self.dal.get_voter(username):
-            self.dal.add_voter(username, hashed_password, "")
+            self.dal.add_voter(username, hashed_password)
             response["status"] = "SUCCESS"
         else:
             response["status"] = "FAILED"
@@ -246,7 +263,6 @@ class RequestHandler:
             "type": RequestType.GET_RESULTS_RESPONSE.value,
             "results": results
         }
-        print(response)
         return response
 
     def handle_assign_voter_to_campaign_request(self, request):

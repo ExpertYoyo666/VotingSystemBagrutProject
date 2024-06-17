@@ -27,20 +27,21 @@ class Server:
         }
         while True:
             try:
-                # Read and validate the start marker
+                # read and validate the start marker
                 if self.recvall(client_socket, len(START_MARKER)) != START_MARKER:
                     break
 
-                # Read the message length
+                # read the message length
                 raw_msg_len = self.recvall(client_socket, 4)
                 if not raw_msg_len:
                     break
+                # convert message length from bytes to int
                 msg_len = struct.unpack('>I', raw_msg_len)[0]
 
-                # Read the message payload
+                # read the message payload
                 payload = self.recvall(client_socket, msg_len).decode('utf-8')
 
-                # Read and validate the end marker
+                # read and validate the end marker
                 if self.recvall(client_socket, len(END_MARKER)) != END_MARKER:
                     break
 
@@ -62,7 +63,8 @@ class Server:
         return data
 
     def send_message(self, sock, message):
-        message = json.dumps(message).encode('utf-8')
+        message = json.dumps(message).encode('utf-8')  # encode message as json
+        # add start and end markers and add message length as bytes
         msg = (START_MARKER +
                struct.pack('>I', len(message)) +
                message +
@@ -70,17 +72,21 @@ class Server:
         sock.sendall(msg)
 
     def main_loop(self):
+        # init socket
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-        context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
-
         server.bind(('127.0.0.1', PORT))
         server.listen()
 
+        # init context for ssl
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
+
         while True:
+            # accept connection
             client_socket, address = server.accept()
             print(f"Accepted connection from {address}")
+            # add ssl
             wrapped_client_socket = context.wrap_socket(client_socket, server_side=True)
+            # handle client in a different thread
             client_handler_thread = threading.Thread(target=self.handle_client, args=(wrapped_client_socket,))
             client_handler_thread.start()

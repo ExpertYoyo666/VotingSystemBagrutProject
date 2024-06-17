@@ -13,6 +13,7 @@ class MainFrame(wx.Frame):
         self.login_view = LoginView(self)
         self.main_view = MainView(self)
 
+        # add both panels to the frame
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.login_view, 1, wx.EXPAND)
         self.sizer.Add(self.main_view, 1, wx.EXPAND)
@@ -21,11 +22,13 @@ class MainFrame(wx.Frame):
         self.Centre()
 
     def show_login_view(self):
+        # show login panel and hide main panel
         self.login_view.Show()
         self.main_view.Hide()
         self.Layout()
 
     def show_main_view(self):
+        # show main panel and hide login panel
         self.login_view.Hide()
         self.main_view.Show()
         self.Layout()
