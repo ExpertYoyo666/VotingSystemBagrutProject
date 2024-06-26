@@ -60,12 +60,16 @@ class Protocol:
     def send_message(self, message):
         # encode message as json
         message = json.dumps(message).encode('utf-8')
-        # add start and end markers and add message length as bytes
+        # add start and end markers, convert message length to bytes
         msg = (START_MARKER +
                struct.pack('>I', len(message)) +
                message +
                END_MARKER)
-        self.sock.sendall(msg)
+        # send message to server
+        try:
+            self.sock.sendall(msg)
+        except ssl.SSLEOFError:
+            raise ConnectionError("Server Disconnected")
 
     def receive_server_response(self):
         try:
@@ -131,8 +135,8 @@ class Protocol:
         response = self.receive_server_response()
 
         if response["type"] == RequestType.AUTH_RESPONSE.value and response["status"] == "SUCCESS":
-            return True
-        return False
+            return True, ""
+        return False, response["reason"]
 
     def vote(self, campaign_id, nominee_id, num_candidates, public_key):
         # set public key
@@ -147,8 +151,8 @@ class Protocol:
         response = self.receive_server_response()
 
         if response["type"] == RequestType.VOTE_RESPONSE.value:
-            return response["status"], response["receipt"]
-        return "FAIL", ""
+            return response["status"], response["receipt"], response["reason"]
+        return "FAIL", "", ""
 
 
 

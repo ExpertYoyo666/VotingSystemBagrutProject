@@ -49,7 +49,7 @@ class Protocol:
 
         # create connection
         sock = socket.create_connection((HOST, PORT))
-        sock.settimeout(10)
+        sock.settimeout(1)
         # add ssl
         wrapped_sock = context.wrap_socket(sock, server_hostname=HOST)
         self.sock = wrapped_sock
@@ -73,7 +73,10 @@ class Protocol:
                message +
                END_MARKER)
         # send message to server
-        self.sock.sendall(msg)
+        try:
+            self.sock.sendall(msg)
+        except ssl.SSLEOFError:
+            raise ConnectionError("Server Disconnected")
 
     def receive_server_response(self):
         try:
@@ -111,8 +114,8 @@ class Protocol:
         response = self.receive_server_response()
 
         if response["type"] == RequestType.ADMIN_AUTH_RESPONSE.value and response["status"] == "SUCCESS":
-            return True
-        return False
+            return True, ""
+        return False, response["reason"]
 
     def get_campaigns_list(self):
         # create request
@@ -162,8 +165,8 @@ class Protocol:
 
         # check success
         if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
-            return True
-        return False
+            return True, ""
+        return False, response["reason"]
 
     def activate_campaign(self, campaign_id):
         # create request
@@ -178,8 +181,8 @@ class Protocol:
 
         # check success
         if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
-            return True
-        return False
+            return True, ""
+        return False, response["reason"]
 
     def add_voter(self, voter_name, voter_password):
         # create request
@@ -195,8 +198,8 @@ class Protocol:
 
         # check success
         if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
-            return True
-        return False
+            return True, ""
+        return False, response["reason"]
 
     def add_voter_to_campaign(self, voter_name, campaign_id):
         # create request
@@ -212,8 +215,8 @@ class Protocol:
 
         # check success
         if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
-            return True
-        return False
+            return True, ""
+        return False, response["reason"]
 
     def add_nominee_to_campaign(self, nominee_name, campaign_id):
         # create request
@@ -229,8 +232,8 @@ class Protocol:
 
         # check success
         if response["type"] == RequestType.GENERIC_RESPONSE.value and response["status"] == "SUCCESS":
-            return True
-        return False
+            return True, ""
+        return False, response["reason"]
 
     def get_campaign_results(self, campaign_id):
         request = {
@@ -245,8 +248,3 @@ class Protocol:
         if response["type"] == RequestType.GET_RESULTS_RESPONSE.value:
             return response["results"]
         return []
-
-
-
-
-

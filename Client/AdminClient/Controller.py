@@ -32,8 +32,15 @@ class Controller:
     def on_login(self, event):
         # get username and password and try to auth
         username, password = self.view.get_login_credentials()
-        success = self.request_handler.auth(username, password)
 
+        if not username or not password:
+            display_popup_message("Invalid username or password", "Login Error")
+            return
+
+        try:
+            success, reason = self.request_handler.auth(username, password)
+        except ConnectionError as e:
+            display_popup_message("Server Disconnected", "Connection Error")
         # if success, move to main view, init the main screen and save that we are logged in
         if success:
             self.view.show_main_view()
@@ -42,6 +49,8 @@ class Controller:
             self.view.Layout()
             self.view.set_welcome_message(username)
             self.populate_campaign_choices()
+        else:
+            display_popup_message(reason, "Login Error")
 
     def update_time(self):
         # every second call this again to update the time text
@@ -70,7 +79,11 @@ class Controller:
         private_key_str = f'{private_key.p}, {private_key.q}'
         uid = str(uuid.uuid4())  # get a random 128 bit uuid
         # send the request
-        success = self.request_handler.add_campaign(inputs[0], uid, inputs[1], inputs[2], public_key_str)
+
+        try:
+            success, reason = self.request_handler.add_campaign(inputs[0], uid, inputs[1], inputs[2], public_key_str)
+        except ConnectionError as e:
+            display_popup_message("Server Disconnected", "Connection Error")
 
         # act on success or failure
         title = "Add Campaign Result"
@@ -79,78 +92,111 @@ class Controller:
             self.model.add_campaign(uid, inputs[0], public_key_str, private_key_str)
             self.populate_campaign_choices()
         else:
-            message = "Failed."
+            message = reason
 
         display_popup_message(message, title)
 
     def on_activate_campaign(self, event):
         # send inputs and send request
         campaign_index = self.view.get_activate_campaign_input()
+        if campaign_index is wx.NOT_FOUND:
+            display_popup_message("Please select a campaign")
+            return
         campaign_id = self.model.get_campaign_by_index(campaign_index)[0]
-        success = self.request_handler.activate_campaign(campaign_id)
+
+        try:
+            success, reason = self.request_handler.activate_campaign(campaign_id)
+        except ConnectionError as e:
+            display_popup_message("Server Disconnected", "Connection Error")
 
         # act on success or failure
         title = "Activate Campaign Result"
         if success:
             message = "Success."
         else:
-            message = "Failed."
+            message = reason
 
         display_popup_message(message, title)
 
     def on_add_voter(self, event):
         inputs = self.view.get_add_voter_input()
-        success = self.request_handler.add_voter(*inputs)
+
+        try:
+            success, reason = self.request_handler.add_voter(*inputs)
+        except ConnectionError as e:
+            display_popup_message("Server Disconnected", "Connection Error")
 
         # act on success or failure
         title = "Add Voter Result"
         if success:
             message = "Success."
         else:
-            message = "Failed."
+            message = reason
 
         display_popup_message(message, title)
 
     def on_add_voter_to_campaign(self, event):
         voter_name, campaign_index = self.view.get_add_voter_to_campaign_input()
+        if campaign_index is wx.NOT_FOUND:
+            display_popup_message("Please select a campaign")
+            return
         campaign_name = self.model.get_campaign_by_index(campaign_index)[1]
         campaign_id = self.model.get_campaign_id(campaign_name)
-        success = self.request_handler.add_voter_to_campaign(voter_name, campaign_id)
+
+        try:
+            success, reason = self.request_handler.add_voter_to_campaign(voter_name, campaign_id)
+        except ConnectionError as e:
+            display_popup_message("Server Disconnected", "Connection Error")
 
         # act on success or failure
         title = "Add Voter To Campaign Result"
         if success:
             message = "Success."
         else:
-            message = "Failed."
+            message = reason
 
         display_popup_message(message, title)
 
     def on_add_nominee_to_campaign(self, event):
         nominee_name, campaign_index = self.view.get_add_nominee_to_campaign_input()
+        if campaign_index is wx.NOT_FOUND:
+            display_popup_message("Please select a campaign")
+            return
         campaign_name = self.model.get_campaign_by_index(campaign_index)[1]
         campaign_id = self.model.get_campaign_id(campaign_name)
-        success = self.request_handler.add_nominee_to_campaign(nominee_name, campaign_id)
+
+        try:
+            success, reason = self.request_handler.add_nominee_to_campaign(nominee_name, campaign_id)
+        except ConnectionError as e:
+            display_popup_message("Server Disconnected", "Connection Error")
 
         # act on success or failure
         title = "Add Nominee To Campaign Result"
         if success:
             message = "Success."
         else:
-            message = "Failed."
+            message = reason
 
         display_popup_message(message, title)
 
     def on_get_results(self, event):
         # get campaign input and process the input
         campaign_index = self.view.get_get_results_input()
+        if campaign_index is wx.NOT_FOUND:
+            display_popup_message("Please select a campaign")
+            return
         campaign = self.model.get_campaign_by_index(campaign_index)
         campaign_id = campaign[0]
         campaign_remote_id = campaign[1]
-        results = self.request_handler.get_campaign_results(campaign_id)
 
-        # get info on campaign from server
-        campaign_server_info = self.request_handler.get_campaign_info(campaign_id)
+        try:
+            results = self.request_handler.get_campaign_results(campaign_id)
+
+            # get info on campaign from server
+            campaign_server_info = None
+            campaign_server_info = self.request_handler.get_campaign_info(campaign_id)
+        except ConnectionError as e:
+            display_popup_message("Server Disconnected", "Connection Error")
 
         # get info on campaign from local database
         campaign_info = self.model.get_campaign_info(campaign_remote_id)

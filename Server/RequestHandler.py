@@ -173,7 +173,7 @@ class RequestHandler:
             nonce = request["nonce"]
             encrypted_vote = request["encrypted_vote"]
 
-            if not isinstance(campaign_id, int) or not isinstance(nonce, str) or not isinstance(encrypted_vote, dict):
+            if not isinstance(campaign_id, int) or not isinstance(nonce, str) or not isinstance(encrypted_vote, list):
                 response["reason"] = "Invalid field types"
                 return response
 

@@ -466,7 +466,7 @@ class MainView(wx.Panel):
         return campaign_name, start_time, end_time
 
     def get_activate_campaign_input(self):
-        campaign_index = self.activate_campaign_name_choice.GetCurrentSelection()
+        campaign_index = self.activate_campaign_name_choice.GetSelection()
 
         return campaign_index
 
@@ -478,18 +478,18 @@ class MainView(wx.Panel):
 
     def get_add_voter_to_campaign_input(self):
         voter_name = self.add_voter_to_campaign_voter_name_input.GetValue()
-        campaign_index = self.add_voter_to_campaign_campaign_name_choice.GetCurrentSelection()
+        campaign_index = self.add_voter_to_campaign_campaign_name_choice.GetSelection()
 
         return voter_name, campaign_index
 
     def get_get_results_input(self):
-        campaign_index = self.get_results_campaign_name_choice.GetCurrentSelection()
+        campaign_index = self.get_results_campaign_name_choice.GetSelection()
 
         return campaign_index
 
     def get_add_nominee_to_campaign_input(self):
         nominee_name = self.add_nominee_to_campaign_nominee_name_input.GetValue()
-        campaign_index = self.add_nominee_to_campaign_campaign_name_choice.GetCurrentSelection()
+        campaign_index = self.add_nominee_to_campaign_campaign_name_choice.GetSelection()
 
         return nominee_name, campaign_index
 

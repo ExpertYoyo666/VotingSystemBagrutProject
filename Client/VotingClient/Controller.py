@@ -6,6 +6,10 @@ def display_popup_message(message, title="Voting Client"):
     popup_window.ShowModal()
 
 
+def display_error(reason):
+    display_popup_message(reason)
+
+
 class Controller:
     def __init__(self, model, view, request_handler):
         self.model = model
@@ -24,16 +28,22 @@ class Controller:
 
     def on_login(self, event):
         username, password = self.view.get_login_credentials()
-        success = self.request_handler.auth(username, password)
 
-        if success:
-            self.view.show_main_view()
-            self.model.toggle_auth()
-            self.update_time()
-            self.view.set_welcome_message(username)
-            self.model.campaigns = self.request_handler.get_campaigns_list()
-            self.view.set_campaign_choices([campaign[2] for campaign in self.model.campaigns])
-            self.view.Layout()
+        try:
+            success, reason = self.request_handler.auth(username, password)
+
+            if success:
+                self.view.show_main_view()
+                self.model.toggle_auth()
+                self.update_time()
+                self.view.set_welcome_message(username)
+                self.model.campaigns = self.request_handler.get_campaigns_list()
+                self.view.set_campaign_choices([campaign[2] for campaign in self.model.campaigns])
+                self.view.Layout()
+            else:
+                display_error("Invalid username or password")
+        except ConnectionError as e:
+            display_popup_message("Server Disconnected", "Connection Error")
 
     def update_time(self):
         self.view.update_time()
@@ -51,8 +61,12 @@ class Controller:
 
         campaign_id = self.model.get_campaign_id_from_name(campaign_name)
 
-        self.model.nominees, self.model.public_key = self.request_handler.get_campaign_info(campaign_id)
-        self.view.set_nominee_choices([nominee[1] for nominee in self.model.nominees])
+        try:
+            self.model.nominees, self.model.public_key = self.request_handler.get_campaign_info(campaign_id)
+            self.view.set_nominee_choices([nominee[1] for nominee in self.model.nominees])
+
+        except ConnectionError as e:
+            display_popup_message("Server Disconnected", "Connection Error")
 
     def on_vote(self, event):
         # get inputs
@@ -68,10 +82,15 @@ class Controller:
             return
 
         # do vote
-        success, receipt = self.request_handler.vote(campaign_id, nominee_id, num_candidates, self.model.public_key)
+        success, receipt = False, None
+        try:
+            success, receipt, reason = self.request_handler.vote(campaign_id, nominee_id, num_candidates, self.model.public_key)
+        except ConnectionError as e:
+            display_popup_message("Server Disconnected", "Connection Error")
+
         if success == "SUCCESS":
             message = "Success\nReceipt: " + receipt
         else:
-            message = "Failed."
+            message = reason
 
         display_popup_message(message, "Vote Result")
