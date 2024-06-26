@@ -3,6 +3,7 @@ import threading
 import struct
 import json
 import ssl
+from logger import logger
 
 from RequestHandler import RequestHandler
 
@@ -25,6 +26,8 @@ class Server:
             "is_admin": False,
             "uid": None
         }
+        peername = str(client_socket.getpeername())
+        logger.info("Connected to client from: " + peername)
         while True:
             try:
                 # read and validate the start marker
@@ -52,6 +55,7 @@ class Server:
                 break
 
         client_socket.close()
+        logger.info("Client " + peername + " disconnected")
 
     def recvall(self, sock, n):
         data = b''
@@ -80,6 +84,8 @@ class Server:
         # init context for ssl
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
+
+        logger.info("Listening for clients...")
 
         while True:
             # accept connection

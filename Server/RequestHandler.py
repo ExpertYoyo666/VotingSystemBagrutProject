@@ -3,7 +3,7 @@ import time
 from enum import Enum
 import bcrypt as bcrypt
 import shortuuid
-
+from logger import logger
 from VoteHandler import validate_vote_signature, tally_votes_in_batches
 
 
@@ -115,6 +115,7 @@ class RequestHandler:
             if voter is not None and bcrypt.checkpw(password.encode(), voter[2]):
                 response["status"] = "SUCCESS"
                 response["reason"] = ""
+                logger.info("Voter '" + username + "' authenticated")
                 return response, voter[0], True
 
             response["reason"] = "Authentication failed"
@@ -211,6 +212,7 @@ class RequestHandler:
                 vote_receipt = '-'.join(short_uuid[i:i + 4] for i in range(0, 16, 4))
                 self.dal.add_vote(nonce, campaign_id, vote_receipt, json.dumps(encrypted_vote))
                 self.dal.set_voter_has_voted(voter_id, campaign_id)
+                logger.info("Vote accepted from voter " + str(voter_id) + " for campaign " + str(campaign_id))
                 response["status"] = "SUCCESS"
                 response["reason"] = "Vote accepted"
                 response["receipt"] = vote_receipt
@@ -280,6 +282,7 @@ class RequestHandler:
 
             self.dal.add_campaign(campaign_name, campaign_id, start_timestamp, end_timestamp, public_key)
 
+            logger.info("Campaign '" + campaign_name + "' added")
             response["status"] = "SUCCESS"
             response["reason"] = ""
         except Exception as e:
@@ -312,6 +315,7 @@ class RequestHandler:
 
             self.dal.activate_campaign(campaign_id)
 
+            logger.info("Campaign " + str(campaign_id) + " activated")
             response["status"] = "SUCCESS"
             response["reason"] = ""
         except Exception as e:
@@ -340,6 +344,7 @@ class RequestHandler:
 
             admin = self.dal.get_admin(username)
             if admin is not None and bcrypt.checkpw(password.encode(), admin[2]):
+                logger.info("Admin '" + username + "' authenticated")
                 response["status"] = "SUCCESS"
                 response["reason"] = ""
                 return response, admin[0], True
@@ -381,6 +386,7 @@ class RequestHandler:
             is_activated = campaign_info['is_active']
             if not is_activated:
                 self.dal.add_nominee_to_campaign(campaign_id, name)
+                logger.info("Nominee '" + name + "' added to campaign " + str(campaign_id))
                 response["status"] = "SUCCESS"
                 response["reason"] = ""
             else:
@@ -421,6 +427,7 @@ class RequestHandler:
             hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
             self.dal.add_voter(username, hashed_password)
 
+            logger.info("Voter '" + username + "' added")
             response["status"] = "SUCCESS"
             response["reason"] = ""
         except Exception as e:
@@ -455,6 +462,7 @@ class RequestHandler:
             tally_votes_in_batches(self.dal, campaign_id, public_key_str)
             results = self.dal.get_aggregated_tallies(campaign_id)
 
+            logger.info("Results for campaign " + str(campaign_id) + " retrieved")
             response = {
                 "type": RequestType.GET_RESULTS_RESPONSE.value,
                 "status": "SUCCESS",
@@ -492,6 +500,7 @@ class RequestHandler:
             voter_id = voter[0]
             self.dal.assign_voter_to_campaign(voter_id, campaign_id)
 
+            logger.info("Voter '" + voter_name + "' assigned to campaign " + str(campaign_id))
             response["status"] = "SUCCESS"
             response["reason"] = ""
         except Exception as e:

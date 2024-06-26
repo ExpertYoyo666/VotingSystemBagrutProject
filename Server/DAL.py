@@ -1,6 +1,7 @@
 import json
 import sqlite3
 from time import time
+from logger import logger
 
 import bcrypt
 
@@ -48,6 +49,7 @@ class DAL:
         default_admin_username = "admin"
         default_admin_password = "admin"
         if self.get_admin(default_admin_username) is None:
+            logger.info("Creating default admin account.")
             hashed_password = bcrypt.hashpw(default_admin_password.encode(), bcrypt.gensalt())
             self.add_admin(default_admin_username, hashed_password)
 
