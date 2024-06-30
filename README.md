@@ -1,16 +1,40 @@
 Welcome to my project!
 
-_How to run_:
+This project implements an Internet voting system. It includes a Server and two client applications, one for the administration and one for the voters.
 
+## How to run
+
+### Activate the virtual environment:
+
+In Linux:
+```bash
 python -m venv venv
-source venv\Scripts\activate   (Linux)
- -or-
-venv/Scripts/activate  (Windows)
+source venv\Scripts\activate
+```
+or for Windows:
+```bash
+venv/Scripts/activate
+```
 
-pip install -r requirements.txt
+### Install dependencies
+```bash
+pip install -r requirements.txt`
+```
 
-python Client/AdminClient/Main.py
-python Client/VotingClient/Main.py
-
+### Run the server and 
+```bash
 cd Server
 python Main.py
+```
+
+### Run the clients
+```bash
+cd Client/AdminClient/
+python Main.py
+```
+
+```bash
+Client/VotingClient/
+python Main.py
+```
+
